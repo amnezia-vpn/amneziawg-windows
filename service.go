@@ -14,13 +14,13 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/amnezia-vpn/amnezia-wg/conn"
+	"github.com/amnezia-vpn/amnezia-wg/device"
+	"github.com/amnezia-vpn/amnezia-wg/ipc"
+	"github.com/amnezia-vpn/amnezia-wg/tun"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/mgr"
-	"golang.zx2c4.com/wireguard/conn"
-	"golang.zx2c4.com/wireguard/device"
-	"golang.zx2c4.com/wireguard/ipc"
-	"golang.zx2c4.com/wireguard/tun"
 
 	"github.com/amnezia-vpn/awg-windows/conf"
 	"github.com/amnezia-vpn/awg-windows/elevate"
@@ -104,7 +104,7 @@ func (service *tunnelService) Execute(args []string, r <-chan svc.ChangeRequest,
 		log.Println("Shutting down")
 	}()
 
-	err = ringlogger.InitGlobalLogger("TUN")
+	err = ringlogger.InitGlobalLogger("TUN", "awg")
 	if err != nil {
 		serviceError = services.ErrorRingloggerOpen
 		return

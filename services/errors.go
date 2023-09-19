@@ -31,6 +31,8 @@ const (
 	ErrorDropPrivileges
 	ErrorRunScript
 	ErrorWin32
+	ErrorCreateWintun
+	ErrorUAPIListen
 )
 
 func (e Error) Error() string {
@@ -69,6 +71,10 @@ func (e Error) Error() string {
 		return "An error occurred while running a configuration script command"
 	case ErrorWin32:
 		return "An internal Windows error has occurred"
+	case ErrorUAPIListen:
+		return "Unable to listen on named pipe"
+	case ErrorCreateWintun:
+		return "Unable to create Wintun interface"
 	default:
 		return "An unknown error has occurred"
 	}

@@ -8,7 +8,7 @@ package main
 import (
 	"golang.org/x/sys/windows"
 
-	"golang.zx2c4.com/wireguard/ipc"
+	"github.com/amnezia-vpn/amnezia-wg/ipc"
 
 	"github.com/amnezia-vpn/awg-windows/conf"
 )
