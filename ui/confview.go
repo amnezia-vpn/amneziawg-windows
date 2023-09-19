@@ -13,8 +13,8 @@ import (
 	"github.com/lxn/walk"
 	"github.com/lxn/win"
 
-	"golang.zx2c4.com/wireguard/windows/conf"
-	"golang.zx2c4.com/wireguard/windows/l18n"
+	"github.com/amnezia-vpn/awg-windows/conf"
+	"github.com/amnezia-vpn/awg-windows/l18n"
 	"golang.zx2c4.com/wireguard/windows/manager"
 )
 
@@ -47,6 +47,17 @@ type interfaceView struct {
 	status       *labelStatusLine
 	publicKey    *labelTextLine
 	listenPort   *labelTextLine
+
+	junkPacketCount 			*labelTextLine
+	junkPacketMinSize 			*labelTextLine
+	junkPacketMaxSize 			*labelTextLine
+	initPacketJunkSize 			*labelTextLine
+	responsePacketJunkSize 		*labelTextLine
+	initPacketMagicHeader 		*labelTextLine
+	responsePacketMagicHeader 	*labelTextLine
+	underloadPacketMagicHeader 	*labelTextLine
+	transportPacketMagicHeader 	*labelTextLine
+	
 	mtu          *labelTextLine
 	addresses    *labelTextLine
 	dns          *labelTextLine
@@ -304,6 +315,15 @@ func newInterfaceView(parent walk.Container) (*interfaceView, error) {
 	items := []labelTextLineItem{
 		{l18n.Sprintf("Public key:"), &iv.publicKey},
 		{l18n.Sprintf("Listen port:"), &iv.listenPort},
+		{l18n.Sprintf("Jc:"), &iv.junkPacketCount},
+		{l18n.Sprintf("Jmin:"), &iv.junkPacketMinSize},
+		{l18n.Sprintf("Jmax:"), &iv.junkPacketMaxSize},
+		{l18n.Sprintf("S1:"), &iv.initPacketJunkSize},
+		{l18n.Sprintf("S2:"), &iv.responsePacketJunkSize},
+		{l18n.Sprintf("H1:"), &iv.initPacketMagicHeader},
+		{l18n.Sprintf("H2:"), &iv.responsePacketMagicHeader},
+		{l18n.Sprintf("H3:"), &iv.underloadPacketMagicHeader},
+		{l18n.Sprintf("H4:"), &iv.transportPacketMagicHeader},
 		{l18n.Sprintf("MTU:"), &iv.mtu},
 		{l18n.Sprintf("Addresses:"), &iv.addresses},
 		{l18n.Sprintf("DNS servers:"), &iv.dns},
@@ -378,6 +398,60 @@ func (iv *interfaceView) apply(c *conf.Interface) {
 		iv.listenPort.show(strconv.Itoa(int(c.ListenPort)))
 	} else {
 		iv.listenPort.hide()
+	}
+
+	if c.JunkPacketCount > 0 {
+		iv.junkPacketCount.show(strconv.Itoa(int(c.JunkPacketCount)))
+	} else {
+		iv.junkPacketCount.hide()
+	}
+
+	if c.JunkPacketMinSize > 0 {
+		iv.junkPacketMinSize.show(strconv.Itoa(int(c.JunkPacketMinSize)))
+	} else {
+		iv.junkPacketMinSize.hide()
+	}
+
+	if c.JunkPacketMaxSize > 0 {
+		iv.junkPacketMaxSize.show(strconv.Itoa(int(c.JunkPacketMaxSize)))
+	} else {
+		iv.junkPacketMaxSize.hide()
+	}
+
+	if c.InitPacketJunkSize > 0 {
+		iv.initPacketJunkSize.show(strconv.Itoa(int(c.InitPacketJunkSize)))
+	} else {
+		iv.initPacketJunkSize.hide()
+	}
+
+	if c.ResponsePacketJunkSize > 0 {
+		iv.responsePacketJunkSize.show(strconv.Itoa(int(c.ResponsePacketJunkSize)))
+	} else {
+		iv.responsePacketJunkSize.hide()
+	}
+
+	if c.InitPacketMagicHeader > 0 {
+		iv.initPacketMagicHeader.show(strconv.FormatUint(uint64(c.InitPacketMagicHeader), 10))
+	} else {
+		iv.initPacketMagicHeader.hide()
+	}
+
+	if c.ResponsePacketMagicHeader > 0 {
+		iv.responsePacketMagicHeader.show(strconv.FormatUint(uint64(c.ResponsePacketMagicHeader), 10))
+	} else {
+		iv.responsePacketMagicHeader.hide()
+	}
+
+	if c.UnderloadPacketMagicHeader > 0 {
+		iv.underloadPacketMagicHeader.show(strconv.FormatUint(uint64(c.UnderloadPacketMagicHeader), 10))
+	} else {
+		iv.underloadPacketMagicHeader.hide()
+	}
+
+	if c.TransportPacketMagicHeader > 0 {
+		iv.transportPacketMagicHeader.show(strconv.FormatUint(uint64(c.TransportPacketMagicHeader), 10))
+	} else {
+		iv.transportPacketMagicHeader.hide()
 	}
 
 	if c.MTU > 0 {

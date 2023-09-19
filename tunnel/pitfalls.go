@@ -11,10 +11,10 @@ import (
 	"strings"
 	"unsafe"
 
+	"github.com/amnezia-vpn/awg-windows/conf"
+	"github.com/amnezia-vpn/awg-windows/tunnel/winipcfg"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/svc/mgr"
-	"golang.zx2c4.com/wireguard/windows/conf"
-	"golang.zx2c4.com/wireguard/windows/tunnel/winipcfg"
 )
 
 func evaluateStaticPitfalls() {

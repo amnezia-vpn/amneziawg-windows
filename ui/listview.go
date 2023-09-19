@@ -11,7 +11,7 @@ import (
 
 	"github.com/lxn/win"
 
-	"golang.zx2c4.com/wireguard/windows/conf"
+	"github.com/amnezia-vpn/awg-windows/conf"
 	"golang.zx2c4.com/wireguard/windows/manager"
 
 	"github.com/lxn/walk"

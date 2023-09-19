@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/amnezia-vpn/awg-windows/version"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/svc"
-	"golang.zx2c4.com/wireguard/windows/version"
 )
 
 var (

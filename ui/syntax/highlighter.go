@@ -8,7 +8,10 @@
 
 package syntax
 
-import "unsafe"
+import (
+	"math"
+	"unsafe"
+)
 
 type highlight int
 
@@ -28,6 +31,15 @@ const (
 	highlightDelimiter
 	highlightTable
 	highlightCmd
+	highlightJc
+	highlightJmin
+	highlightJmax
+	highlightS1
+	highlightS2
+	highlightH1
+	highlightH2
+	highlightH3
+	highlightH4
 	highlightError
 )
 
@@ -253,6 +265,14 @@ func (s stringSpan) isValidPort() bool {
 	return s.isValidUint(false, 0, 65535)
 }
 
+func (s stringSpan) isValidUint16() bool {
+	return s.isValidUint(false, 0, math.MaxUint16)
+}
+
+func (s stringSpan) isValidUint32() bool {
+	return s.isValidUint(false, 0, math.MaxUint32)
+}
+
 func (s stringSpan) isValidMTU() bool {
 	return s.isValidUint(false, 576, 65535)
 }
@@ -376,6 +396,15 @@ const (
 	fieldAllowedIPs
 	fieldEndpoint
 	fieldPersistentKeepalive
+	fieldJc
+	fieldJmin
+	fieldJmax
+	fieldS1
+	fieldS2
+	fieldH1
+	fieldH2
+	fieldH3
+	fieldH4
 	fieldInvalid
 )
 
@@ -395,6 +424,24 @@ func (s stringSpan) field() field {
 		return fieldPrivateKey
 	case s.isCaselessSame("ListenPort"):
 		return fieldListenPort
+	case s.isCaselessSame("Jc"):
+		return fieldJc
+	case s.isCaselessSame("Jmin"):
+		return fieldJmin
+	case s.isCaselessSame("Jmax"):
+		return fieldJmax
+	case s.isCaselessSame("S1"):
+		return fieldS1
+	case s.isCaselessSame("S2"):
+		return fieldS2
+	case s.isCaselessSame("H1"):
+		return fieldH1
+	case s.isCaselessSame("H2"):
+		return fieldH2
+	case s.isCaselessSame("H3"):
+		return fieldH3
+	case s.isCaselessSame("H4"):
+		return fieldH4
 	case s.isCaselessSame("Address"):
 		return fieldAddress
 	case s.isCaselessSame("DNS"):
@@ -512,6 +559,24 @@ func (hsa *highlightSpanArray) highlightValue(parent, s stringSpan, section fiel
 		hsa.append(parent.s, s, validateHighlight(s.isValidKey(), highlightPrivateKey))
 	case fieldPublicKey:
 		hsa.append(parent.s, s, validateHighlight(s.isValidKey(), highlightPublicKey))
+	case fieldJc:
+		hsa.append(parent.s, s, validateHighlight(s.isValidUint16(), highlightJc))
+	case fieldJmin:
+		hsa.append(parent.s, s, validateHighlight(s.isValidUint16(), highlightJmin))
+	case fieldJmax:
+		hsa.append(parent.s, s, validateHighlight(s.isValidUint16(), highlightJmax))
+	case fieldS1:
+		hsa.append(parent.s, s, validateHighlight(s.isValidUint16(), highlightS1))
+	case fieldS2:
+		hsa.append(parent.s, s, validateHighlight(s.isValidUint16(), highlightS2))
+	case fieldH1:
+		hsa.append(parent.s, s, validateHighlight(s.isValidUint32(), highlightH1))
+	case fieldH2:
+		hsa.append(parent.s, s, validateHighlight(s.isValidUint32(), highlightH2))
+	case fieldH3:
+		hsa.append(parent.s, s, validateHighlight(s.isValidUint32(), highlightH3))
+	case fieldH4:
+		hsa.append(parent.s, s, validateHighlight(s.isValidUint32(), highlightH4))
 	case fieldPresharedKey:
 		hsa.append(parent.s, s, validateHighlight(s.isValidKey(), highlightPresharedKey))
 	case fieldMTU:

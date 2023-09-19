@@ -9,6 +9,7 @@ import (
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"net/netip"
 	"strings"
@@ -16,7 +17,7 @@ import (
 
 	"golang.org/x/crypto/curve25519"
 
-	"golang.zx2c4.com/wireguard/windows/l18n"
+	"github.com/amnezia-vpn/awg-windows/l18n"
 )
 
 const KeyLength = 32
@@ -50,6 +51,16 @@ type Interface struct {
 	PreDown    string
 	PostDown   string
 	TableOff   bool
+
+	JunkPacketCount            uint16
+	JunkPacketMinSize          uint16
+	JunkPacketMaxSize          uint16
+	InitPacketJunkSize         uint16
+	ResponsePacketJunkSize     uint16
+	InitPacketMagicHeader      uint32
+	ResponsePacketMagicHeader  uint32
+	UnderloadPacketMagicHeader uint32
+	TransportPacketMagicHeader uint32
 }
 
 type Peer struct {
@@ -98,6 +109,10 @@ func (e *Endpoint) String() string {
 		return fmt.Sprintf("[%s]:%d", e.Host, e.Port)
 	}
 	return fmt.Sprintf("%s:%d", e.Host, e.Port)
+}
+
+func (k *Key) HexString() string {
+	return hex.EncodeToString(k[:])
 }
 
 func (e *Endpoint) IsEmpty() bool {

@@ -11,8 +11,8 @@ import (
 	"syscall"
 	"unsafe"
 
+	"github.com/amnezia-vpn/awg-windows/tunnel/winipcfg"
 	"golang.org/x/sys/windows"
-	"golang.zx2c4.com/wireguard/windows/tunnel/winipcfg"
 )
 
 type loggerLevel int

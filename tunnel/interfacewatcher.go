@@ -12,12 +12,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/amnezia-vpn/awg-windows/conf"
+	"github.com/amnezia-vpn/awg-windows/driver"
+	"github.com/amnezia-vpn/awg-windows/services"
+	"github.com/amnezia-vpn/awg-windows/tunnel/firewall"
+	"github.com/amnezia-vpn/awg-windows/tunnel/winipcfg"
 	"golang.org/x/sys/windows"
-	"golang.zx2c4.com/wireguard/windows/conf"
-	"golang.zx2c4.com/wireguard/windows/driver"
-	"golang.zx2c4.com/wireguard/windows/services"
-	"golang.zx2c4.com/wireguard/windows/tunnel/firewall"
-	"golang.zx2c4.com/wireguard/windows/tunnel/winipcfg"
 )
 
 type interfaceWatcherError struct {

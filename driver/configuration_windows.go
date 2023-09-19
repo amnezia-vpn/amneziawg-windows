@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"unsafe"
 
+	"github.com/amnezia-vpn/awg-windows/tunnel/winipcfg"
 	"golang.org/x/sys/windows"
-	"golang.zx2c4.com/wireguard/windows/tunnel/winipcfg"
 )
 
 type AdapterState uint32
@@ -57,19 +57,42 @@ type Peer struct {
 type InterfaceFlag uint32
 
 const (
-	InterfaceHasPublicKey  InterfaceFlag = 1 << 0
-	InterfaceHasPrivateKey InterfaceFlag = 1 << 1
-	InterfaceHasListenPort InterfaceFlag = 1 << 2
-	InterfaceReplacePeers  InterfaceFlag = 1 << 3
+	InterfaceHasPublicKey  	InterfaceFlag = 1 << 0
+	InterfaceHasPrivateKey 	InterfaceFlag = 1 << 1
+	InterfaceHasListenPort 	InterfaceFlag = 1 << 2
+	InterfaceReplacePeers  	InterfaceFlag = 1 << 3
+	InterfaceHasJc 			InterfaceFlag = 1 << 4
+	InterfaceHasJmin 		InterfaceFlag = 1 << 5
+	InterfaceHasJmax 		InterfaceFlag = 1 << 6
+	InterfaceHasS1 			InterfaceFlag = 1 << 7
+	InterfaceHasS2 			InterfaceFlag = 1 << 8
+	InterfaceHasH1 			InterfaceFlag = 1 << 9
+	InterfaceHasH2 			InterfaceFlag = 1 << 10
+	InterfaceHasH3 			InterfaceFlag = 1 << 11
+	InterfaceHasH4 			InterfaceFlag = 1 << 12
 )
 
-type Interface struct {
+type DefaultInterface struct {
 	Flags      InterfaceFlag
 	ListenPort uint16
 	PrivateKey [32]byte
 	PublicKey  [32]byte
 	PeerCount  uint32
 	_          [4]byte
+}
+
+type Interface struct {
+	DefaultInterface
+
+	Jc 		   uint16
+	Jmin       uint16
+	Jmax       uint16
+	S1 		   uint16
+	S2 		   uint16
+	H1 		   uint32
+	H2 		   uint32
+	H3 		   uint32
+	H4 		   uint32
 }
 
 var (
@@ -154,6 +177,12 @@ func (builder *ConfigBuilder) Preallocate(size uint32) {
 	if builder.buffer == nil {
 		builder.buffer = make([]byte, 0, size)
 	}
+}
+
+// AppendDefaultInterface appends an interface to the building configuration. This should be called first.
+func (builder *ConfigBuilder) AppendDefaultInterface(interfaze *DefaultInterface) {
+	newBytes := unsafe.Slice((*byte)(unsafe.Pointer(interfaze)), unsafe.Sizeof(*interfaze))
+	builder.buffer = append(builder.buffer, newBytes...)
 }
 
 // AppendInterface appends an interface to the building configuration. This should be called first.

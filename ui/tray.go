@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"golang.zx2c4.com/wireguard/windows/conf"
-	"golang.zx2c4.com/wireguard/windows/l18n"
+	"github.com/amnezia-vpn/awg-windows/conf"
+	"github.com/amnezia-vpn/awg-windows/l18n"
 	"golang.zx2c4.com/wireguard/windows/manager"
 
 	"github.com/lxn/walk"

@@ -9,13 +9,13 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/amnezia-vpn/awg-windows/driver"
 	"github.com/lxn/walk"
 	"github.com/lxn/win"
 	"golang.org/x/sys/windows"
-	"golang.zx2c4.com/wireguard/windows/driver"
 
-	"golang.zx2c4.com/wireguard/windows/l18n"
-	"golang.zx2c4.com/wireguard/windows/version"
+	"github.com/amnezia-vpn/awg-windows/l18n"
+	"github.com/amnezia-vpn/awg-windows/version"
 )
 
 var (

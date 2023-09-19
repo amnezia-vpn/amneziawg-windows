@@ -13,8 +13,8 @@ import (
 	"sync/atomic"
 	"unsafe"
 
+	"github.com/amnezia-vpn/awg-windows/driver/memmod"
 	"golang.org/x/sys/windows"
-	"golang.zx2c4.com/wireguard/windows/driver/memmod"
 )
 
 type lazyDLL struct {
