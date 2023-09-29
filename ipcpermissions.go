@@ -8,9 +8,9 @@ package main
 import (
 	"golang.org/x/sys/windows"
 
-	"golang.zx2c4.com/wireguard/ipc"
+	"github.com/amnezia-vpn/amnezia-wg/ipc"
 
-	"golang.zx2c4.com/wireguard/windows/conf"
+	"github.com/amnezia-vpn/awg-windows/conf"
 )
 
 func CopyConfigOwnerToIPCSecurityDescriptor(filename string) error {

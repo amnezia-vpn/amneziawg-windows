@@ -8,7 +8,7 @@ package services
 import (
 	"errors"
 
-	"golang.zx2c4.com/wireguard/windows/conf"
+	"github.com/amnezia-vpn/awg-windows/conf"
 )
 
 func ServiceNameOfTunnel(tunnelName string) (string, error) {

@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"unsafe"
 
-	"golang.zx2c4.com/wireguard/windows/conf"
+	"github.com/amnezia-vpn/awg-windows/conf"
 )
 
 var Global *Ringlogger

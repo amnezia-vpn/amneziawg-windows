@@ -12,7 +12,7 @@ import (
 
 	"golang.org/x/sys/windows"
 
-	"golang.zx2c4.com/wireguard/windows/conf"
+	"github.com/amnezia-vpn/awg-windows/conf"
 )
 
 func DumpTo(out io.Writer, notSystem bool) error {
