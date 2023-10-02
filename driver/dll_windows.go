@@ -62,14 +62,14 @@ func (p *lazyProc) Addr() uintptr {
 
 // Version returns the version of the driver DLL.
 func Version() string {
-	if modwireguard.Load() != nil {
+	if modwintun.Load() != nil {
 		return "unknown"
 	}
-	resInfo, err := windows.FindResource(modwireguard.Base, windows.ResourceID(1), windows.RT_VERSION)
+	resInfo, err := windows.FindResource(modwintun.Base, windows.ResourceID(1), windows.RT_VERSION)
 	if err != nil {
 		return "unknown"
 	}
-	data, err := windows.LoadResourceData(modwireguard.Base, resInfo)
+	data, err := windows.LoadResourceData(modwintun.Base, resInfo)
 	if err != nil {
 		return "unknown"
 	}

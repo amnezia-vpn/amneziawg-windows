@@ -31,14 +31,14 @@ type Adapter struct {
 }
 
 var (
-	modwireguard                         = newLazyDLL("wireguard.dll", setupLogger)
-	procWireGuardCreateAdapter           = modwireguard.NewProc("WireGuardCreateAdapter")
-	procWireGuardOpenAdapter             = modwireguard.NewProc("WireGuardOpenAdapter")
-	procWireGuardCloseAdapter            = modwireguard.NewProc("WireGuardCloseAdapter")
-	procWireGuardDeleteDriver            = modwireguard.NewProc("WireGuardDeleteDriver")
-	procWireGuardGetAdapterLUID          = modwireguard.NewProc("WireGuardGetAdapterLUID")
-	procWireGuardGetRunningDriverVersion = modwireguard.NewProc("WireGuardGetRunningDriverVersion")
-	procWireGuardSetAdapterLogging       = modwireguard.NewProc("WireGuardSetAdapterLogging")
+	modwintun                            = newLazyDLL("wintun.dll", setupLogger)
+	procWireGuardCreateAdapter           = modwintun.NewProc("WintunCreateAdapter")
+	procWireGuardOpenAdapter             = modwintun.NewProc("WintunOpenAdapter")
+	procWireGuardCloseAdapter            = modwintun.NewProc("WintunCloseAdapter")
+	procWireGuardDeleteDriver            = modwintun.NewProc("WintunDeleteDriver")
+	procWireGuardGetAdapterLUID          = modwintun.NewProc("WintunGetAdapterLUID")
+	procWireGuardGetRunningDriverVersion = modwintun.NewProc("WintunGetRunningDriverVersion")
+	// procWireGuardSetAdapterLogging       = modwintun.NewProc("WintunSetLogger")
 )
 
 type TimestampedWriter interface {
@@ -55,19 +55,19 @@ func logMessage(level loggerLevel, timestamp uint64, msg *uint16) int {
 }
 
 func setupLogger(dll *lazyDLL) {
-	var callback uintptr
-	if runtime.GOARCH == "386" {
-		callback = windows.NewCallback(func(level loggerLevel, timestampLow, timestampHigh uint32, msg *uint16) int {
-			return logMessage(level, uint64(timestampHigh)<<32|uint64(timestampLow), msg)
-		})
-	} else if runtime.GOARCH == "arm" {
-		callback = windows.NewCallback(func(level loggerLevel, _, timestampLow, timestampHigh uint32, msg *uint16) int {
-			return logMessage(level, uint64(timestampHigh)<<32|uint64(timestampLow), msg)
-		})
-	} else if runtime.GOARCH == "amd64" || runtime.GOARCH == "arm64" {
-		callback = windows.NewCallback(logMessage)
-	}
-	syscall.SyscallN(dll.NewProc("WireGuardSetLogger").Addr(), callback)
+	// var callback uintptr
+	// if runtime.GOARCH == "386" {
+	// 	callback = windows.NewCallback(func(level loggerLevel, timestampLow, timestampHigh uint32, msg *uint16) int {
+	// 		return logMessage(level, uint64(timestampHigh)<<32|uint64(timestampLow), msg)
+	// 	})
+	// } else if runtime.GOARCH == "arm" {
+	// 	callback = windows.NewCallback(func(level loggerLevel, _, timestampLow, timestampHigh uint32, msg *uint16) int {
+	// 		return logMessage(level, uint64(timestampHigh)<<32|uint64(timestampLow), msg)
+	// 	})
+	// } else if runtime.GOARCH == "amd64" || runtime.GOARCH == "arm64" {
+	// 	callback = windows.NewCallback(logMessage)
+	// }
+	// syscall.SyscallN(dll.NewProc("WintunSetLogger").Addr(), callback)
 }
 
 func closeAdapter(wireguard *Adapter) {
@@ -146,10 +146,10 @@ const (
 
 // SetLogging enables or disables logging on the WireGuard adapter.
 func (wireguard *Adapter) SetLogging(logState AdapterLogState) (err error) {
-	r1, _, e1 := syscall.SyscallN(procWireGuardSetAdapterLogging.Addr(), wireguard.handle, uintptr(logState))
-	if r1 == 0 {
-		err = e1
-	}
+	// r1, _, e1 := syscall.SyscallN(procWireGuardSetAdapterLogging.Addr(), wireguard.handle, uintptr(logState))
+	// if r1 == 0 {
+	// 	err = e1
+	// }
 	return
 }
 
@@ -167,4 +167,8 @@ func RunningVersion() (version uint32, err error) {
 func (wireguard *Adapter) LUID() (luid winipcfg.LUID) {
 	syscall.SyscallN(procWireGuardGetAdapterLUID.Addr(), wireguard.handle, uintptr(unsafe.Pointer(&luid)))
 	return
+}
+
+func (wireguard *Adapter) BatchSize() int {
+	return 50
 }

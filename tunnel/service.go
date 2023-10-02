@@ -174,12 +174,12 @@ func (service *tunnelService) Execute(args []string, r <-chan svc.ChangeRequest,
 	} else {
 		log.Printf("Using WireGuardNT/%d.%d", (driverVersion>>16)&0xffff, driverVersion&0xffff)
 	}
-	err = adapter.SetLogging(driver.AdapterLogOn)
-	if err != nil {
-		err = fmt.Errorf("Error enabling adapter logging: %w", err)
-		serviceError = services.ErrorCreateNetworkAdapter
-		return
-	}
+	// err = adapter.SetLogging(driver.AdapterLogOn)
+	// if err != nil {
+	// 	err = fmt.Errorf("Error enabling adapter logging: %w", err)
+	// 	serviceError = services.ErrorCreateNetworkAdapter
+	// 	return
+	// }
 
 	err = runScriptCommand(config.Interface.PreUp, config.Name)
 	if err != nil {

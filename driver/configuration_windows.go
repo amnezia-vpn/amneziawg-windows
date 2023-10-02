@@ -96,10 +96,10 @@ type Interface struct {
 }
 
 var (
-	procWireGuardSetAdapterState  = modwireguard.NewProc("WireGuardSetAdapterState")
-	procWireGuardGetAdapterState  = modwireguard.NewProc("WireGuardGetAdapterState")
-	procWireGuardSetConfiguration = modwireguard.NewProc("WireGuardSetConfiguration")
-	procWireGuardGetConfiguration = modwireguard.NewProc("WireGuardGetConfiguration")
+	procWireGuardSetAdapterState  = modwintun.NewProc("WireGuardSetAdapterState")
+	procWireGuardGetAdapterState  = modwintun.NewProc("WireGuardGetAdapterState")
+	procWireGuardSetConfiguration = modwintun.NewProc("WireGuardSetConfiguration")
+	procWireGuardGetConfiguration = modwintun.NewProc("WireGuardGetConfiguration")
 )
 
 // SetAdapterState sets the adapter either Up or Down.
