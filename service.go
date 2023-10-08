@@ -19,7 +19,6 @@ import (
 	"github.com/amnezia-vpn/amnezia-wg/ipc"
 	"github.com/amnezia-vpn/amnezia-wg/tun"
 	"github.com/amnezia-vpn/awg-windows/conf"
-	"github.com/amnezia-vpn/awg-windows/driver"
 	"github.com/amnezia-vpn/awg-windows/elevate"
 	"github.com/amnezia-vpn/awg-windows/ringlogger"
 	"github.com/amnezia-vpn/awg-windows/services"
@@ -33,7 +32,11 @@ type tunnelService struct {
 	TunnelName string
 }
 
-func (service *tunnelService) Execute(args []string, r <-chan svc.ChangeRequest, changes chan<- svc.Status) (svcSpecificEC bool, exitCode uint32) {
+func (service *tunnelService) Execute(
+	args []string,
+	r <-chan svc.ChangeRequest,
+	changes chan<- svc.Status,
+) (svcSpecificEC bool, exitCode uint32) {
 	serviceState := svc.StartPending
 	changes <- svc.Status{State: serviceState}
 
@@ -72,7 +75,9 @@ func (service *tunnelService) Execute(args []string, r <-chan svc.ChangeRequest,
 						buf = make([]byte, 2*len(buf))
 					}
 					lines := bytes.Split(buf, []byte{'\n'})
-					log.Println("Failed to shutdown after 30 seconds. Probably dead locked. Printing stack and killing.")
+					log.Println(
+						"Failed to shutdown after 30 seconds. Probably dead locked. Printing stack and killing.",
+					)
 					for _, line := range lines {
 						if len(bytes.TrimSpace(line)) > 0 {
 							log.Println(string(line))
@@ -121,7 +126,10 @@ func (service *tunnelService) Execute(args []string, r <-chan svc.ChangeRequest,
 		return
 	}
 
-	config, err = conf.FromWgQuickWithUnknownEncoding(service.ConfString,service.TunnelName)
+	config, err = conf.FromWgQuickWithUnknownEncoding(
+		service.ConfString,
+		service.TunnelName,
+	)
 	if err != nil {
 		serviceError = services.ErrorLoadConfiguration
 		return
@@ -130,19 +138,28 @@ func (service *tunnelService) Execute(args []string, r <-chan svc.ChangeRequest,
 
 	log.SetPrefix(fmt.Sprintf("[%s] ", config.Name))
 
-	log.Printf("Got config:%s\n with name:%s\n", service.ConfString, service.TunnelName)
+	log.Printf(
+		"Got config:%s\n with name:%s\n",
+		service.ConfString,
+		service.TunnelName,
+	)
 
 	services.PrintStarting()
 
 	if services.StartedAtBoot() {
 		if m, err := mgr.Connect(); err == nil {
-			if lockStatus, err := m.LockStatus(); err == nil && lockStatus.IsLocked {
+			if lockStatus, err := m.LockStatus(); err == nil &&
+				lockStatus.IsLocked {
 				/* If we don't do this, then the driver installation will block forever, because
 				* installing a network adapter starts the driver service too. Apparently at boot time,
 				* Windows 8.1 locks the SCM for each service start, creating a deadlock if we don't
 				* announce that we're running before starting additional services.
-				*/
-				log.Printf("SCM locked for %v by %s, marking service as started", lockStatus.Age, lockStatus.Owner)
+				 */
+				log.Printf(
+					"SCM locked for %v by %s, marking service as started",
+					lockStatus.Age,
+					lockStatus.Owner,
+				)
 				serviceState = svc.Running
 				changes <- svc.Status{State: serviceState}
 			}
@@ -170,9 +187,22 @@ func (service *tunnelService) Execute(args []string, r <-chan svc.ChangeRequest,
 	for i := 0; i < 15; i++ {
 		if i > 0 {
 			time.Sleep(time.Second)
-			log.Printf("Retrying adapter creation after failure because system just booted (T+%v): %v", windows.DurationSinceBoot(), err)
+			log.Printf(
+				"Retrying adapter creation after failure because system just booted (T+%v): %v",
+				windows.DurationSinceBoot(),
+				err,
+			)
 		}
-		wintun, err = driver.CreateAdapter(config.Name, "WireGuard", deterministicGUID(config))
+		// wintun, err = driver.CreateAdapter(
+		// 	config.Name,
+		// 	"WireGuard",
+		// 	deterministicGUID(config),
+		// )
+		wintun, err = tun.CreateTUNWithRequestedGUID(
+			config.Name,
+			deterministicGUID(config),
+			0,
+		)
 		if err == nil || !services.StartedAtBoot() {
 			break
 		}
@@ -231,7 +261,7 @@ func (service *tunnelService) Execute(args []string, r <-chan svc.ChangeRequest,
 		serviceError = services.ErrorUAPIListen
 		return
 	}
-	
+
 	uapiConf, err := config.ToUAPI()
 	if err != nil {
 		serviceError = services.ErrorDNSLookup
@@ -246,7 +276,7 @@ func (service *tunnelService) Execute(args []string, r <-chan svc.ChangeRequest,
 
 	log.Println("Bringing peers up")
 	dev.Up()
-	watcher.Configure(wintun, config, nativeTun)
+	watcher.Configure(bind.(conn.BindSocketToInterface), config, nativeTun)
 
 	// watcher.Configure(adapter, config, luid)
 
@@ -284,7 +314,6 @@ func (service *tunnelService) Execute(args []string, r <-chan svc.ChangeRequest,
 	}
 }
 
-
 func Run(confString string, tunnelName string) error {
-	return svc.Run(tunnelName, &tunnelService{confString,tunnelName})
+	return svc.Run(tunnelName, &tunnelService{confString, tunnelName})
 }

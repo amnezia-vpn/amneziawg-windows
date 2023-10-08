@@ -45,7 +45,9 @@ func cleanupAddressesOnDisconnectedInterfaces(family winipcfg.AddressFamily, add
 	}
 }
 
-func configureInterface(family winipcfg.AddressFamily, conf *conf.Config, luid winipcfg.LUID) error {
+func configureInterface(family winipcfg.AddressFamily, conf *conf.Config, tun *tun.NativeTun) error {
+	luid := winipcfg.LUID(tun.LUID())
+	
 	retryOnFailure := services.StartedAtBoot()
 	tryTimes := 0
 startOver:

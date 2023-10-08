@@ -10,6 +10,7 @@ require (
 )
 
 require (
-	golang.org/x/net v0.10.0 // indirect
+	github.com/tevino/abool/v2 v2.1.0 // indirect
+	golang.org/x/net v0.15.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
 )
