@@ -17,10 +17,10 @@ import (
 
 	"golang.org/x/sys/windows"
 
-	"golang.zx2c4.com/wireguard/tun"
+	"github.com/amnezia-vpn/amnezia-wg/tun"
 
-	"golang.zx2c4.com/wireguard/windows/elevate"
-	"golang.zx2c4.com/wireguard/windows/tunnel/winipcfg"
+	"github.com/amnezia-vpn/awg-windows/elevate"
+	"github.com/amnezia-vpn/awg-windows/tunnel/winipcfg"
 )
 
 func TestWintunOrdering(t *testing.T) {
