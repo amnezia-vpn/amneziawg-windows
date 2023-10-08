@@ -13,7 +13,7 @@ if exist .deps\prepared goto :build
 	rmdir /s /q .deps 2> NUL
 	mkdir .deps || goto :error
 	cd .deps || goto :error
-	call :download go.zip https://go.dev/dl/go1.18.8.windows-amd64.zip 980788761e75ed33ffc4f2a7a3ff07cd90949bd023eb1a8d855ef0b5de9cbcba || goto :error
+	call :download go.zip https://go.dev/dl/go1.20.8.windows-amd64.zip 6308336f7060023f2c9c58cdeefaa1389b5c4a96b4bd87b6ad742c57f8ac00da || goto :error
 	rem Mirror of https://github.com/mstorsjo/llvm-mingw/releases/download/20201020/llvm-mingw-20201020-msvcrt-x86_64.zip
 	call :download llvm-mingw-msvcrt.zip https://download.wireguard.com/windows-toolchain/distfiles/llvm-mingw-20201020-msvcrt-x86_64.zip 2e46593245090df96d15e360e092f0b62b97e93866e0162dca7f93b16722b844 || goto :error
 	call :download wintun.zip https://www.wintun.net/builds/wintun-0.12.zip eba90e26686ed86595ae0a6d4d3f4f022924b1758f5148a32a91c60cc6e604df || goto :error
@@ -37,14 +37,15 @@ if exist .deps\prepared goto :build
 
 :download
 	echo [+] Downloading %1
-	powershell -command "Invoke-WebRequest" -Uri %2 -OutFile %1 || exit /b 1
+	curl -#fLo %1 %2 || exit /b 1
 	echo [+] Verifying %1
 	for /f %%a in ('CertUtil -hashfile %1 SHA256 ^| findstr /r "^[0-9a-f]*$"') do if not "%%a"=="%~3" exit /b 1
 	echo [+] Extracting %1
-	powershell -command "Expand-Archive" -Path %1 -DestinationPath %cd% || exit /b 1
+	tar -xf %1 %~4 || exit /b 1
 	echo [+] Cleaning up %1
 	del %1 || exit /b 1
 	goto :eof
+
 
 :build_plat
 	set CC=%~2-w64-mingw32-gcc
