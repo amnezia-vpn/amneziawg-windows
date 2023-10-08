@@ -13,10 +13,8 @@ import (
 	"golang.org/x/text/message"
 )
 
-var (
-	printer     *message.Printer
-	printerLock sync.Mutex
-)
+var printer *message.Printer
+var printerLock sync.Mutex
 
 // prn returns the printer for user preferred UI language.
 func prn() *message.Printer {
@@ -52,7 +50,7 @@ func lang() (tag language.Tag) {
 }
 
 // Sprintf is like fmt.Sprintf, but using language-specific formatting.
-func Sprintf(key message.Reference, a ...any) string {
+func Sprintf(key message.Reference, a ...interface{}) string {
 	return prn().Sprintf(key, a...)
 }
 

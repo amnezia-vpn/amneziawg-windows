@@ -6,7 +6,7 @@
 package conf
 
 import (
-	"net/netip"
+	"net"
 	"reflect"
 	"runtime"
 	"testing"
@@ -18,15 +18,6 @@ Address = 10.192.122.1/24
 Address = 10.10.0.1/16 
 PrivateKey = yAnz5TF+lXXJte14tji3zlMNq+hd2rYUIgJBgB3fBmk= 
 ListenPort = 51820  #comments don't matter
-Jc = 10
-Jmin = 20
-Jmax = 30
-S1 = 40
-S2 = 50
-H1 = 60
-H2 = 70
-H3 = 80
-H4 = 90
 
 [Peer] 
 PublicKey   =   xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg=    
@@ -54,7 +45,7 @@ func noError(t *testing.T, err error) bool {
 	return false
 }
 
-func equal(t *testing.T, expected, actual any) bool {
+func equal(t *testing.T, expected, actual interface{}) bool {
 	if reflect.DeepEqual(expected, actual) {
 		return true
 	}
@@ -62,8 +53,7 @@ func equal(t *testing.T, expected, actual any) bool {
 	t.Errorf("Failed equals at %s:%d\nactual   %#v\nexpected %#v", fn, line, actual, expected)
 	return false
 }
-
-func lenTest(t *testing.T, actualO any, expected int) bool {
+func lenTest(t *testing.T, actualO interface{}, expected int) bool {
 	actual := reflect.ValueOf(actualO).Len()
 	if reflect.DeepEqual(expected, actual) {
 		return true
@@ -72,8 +62,7 @@ func lenTest(t *testing.T, actualO any, expected int) bool {
 	t.Errorf("Wrong length at %s:%d\nactual   %#v\nexpected %#v", fn, line, actual, expected)
 	return false
 }
-
-func contains(t *testing.T, list, element any) bool {
+func contains(t *testing.T, list, element interface{}) bool {
 	listValue := reflect.ValueOf(list)
 	for i := 0; i < listValue.Len(); i++ {
 		if reflect.DeepEqual(listValue.Index(i).Interface(), element) {
@@ -88,21 +77,12 @@ func contains(t *testing.T, list, element any) bool {
 func TestFromWgQuick(t *testing.T) {
 	conf, err := FromWgQuick(testInput, "test")
 	if noError(t, err) {
+
 		lenTest(t, conf.Interface.Addresses, 2)
-		contains(t, conf.Interface.Addresses, netip.PrefixFrom(netip.AddrFrom4([4]byte{0, 10, 0, 1}), 16))
-		contains(t, conf.Interface.Addresses, netip.PrefixFrom(netip.AddrFrom4([4]byte{10, 192, 122, 1}), 24))
+		contains(t, conf.Interface.Addresses, IPCidr{net.IPv4(10, 10, 0, 1), uint8(16)})
+		contains(t, conf.Interface.Addresses, IPCidr{net.IPv4(10, 192, 122, 1), uint8(24)})
 		equal(t, "yAnz5TF+lXXJte14tji3zlMNq+hd2rYUIgJBgB3fBmk=", conf.Interface.PrivateKey.String())
 		equal(t, uint16(51820), conf.Interface.ListenPort)
-
-		equal(t, uint16(10), conf.Interface.JunkPacketCount)
-		equal(t, uint16(20), conf.Interface.JunkPacketMinSize)
-		equal(t, uint16(30), conf.Interface.JunkPacketMaxSize)
-		equal(t, uint16(40), conf.Interface.InitPacketJunkSize)
-		equal(t, uint16(50), conf.Interface.ResponsePacketJunkSize)
-		equal(t, uint32(60), conf.Interface.InitPacketMagicHeader)
-		equal(t, uint32(70), conf.Interface.ResponsePacketMagicHeader)
-		equal(t, uint32(80), conf.Interface.UnderloadPacketMagicHeader)
-		equal(t, uint32(90), conf.Interface.TransportPacketMagicHeader)
 
 		lenTest(t, conf.Peers, 3)
 		lenTest(t, conf.Peers[0].AllowedIPs, 2)

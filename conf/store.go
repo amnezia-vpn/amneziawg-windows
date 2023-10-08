@@ -14,10 +14,8 @@ import (
 	"github.com/amnezia-vpn/awg-windows/conf/dpapi"
 )
 
-const (
-	configFileSuffix            = ".conf.dpapi"
-	configFileUnencryptedSuffix = ".conf"
-)
+const configFileSuffix = ".conf.dpapi"
+const configFileUnencryptedSuffix = ".conf"
 
 func ListConfigNames() ([]string, error) {
 	configFileDir, err := tunnelConfigurationsDirectory()
@@ -31,8 +29,8 @@ func ListConfigNames() ([]string, error) {
 	configs := make([]string, len(files))
 	i := 0
 	for _, file := range files {
-		name, err := NameFromPath(file.Name())
-		if err != nil {
+		name := filepath.Base(file.Name())
+		if len(name) <= len(configFileSuffix) || !strings.HasSuffix(name, configFileSuffix) {
 			continue
 		}
 		if !file.Type().IsRegular() {
@@ -42,7 +40,11 @@ func ListConfigNames() ([]string, error) {
 		if err != nil {
 			continue
 		}
-		if info.Mode().Perm()&0o444 == 0 {
+		if info.Mode().Perm()&0444 == 0 {
+			continue
+		}
+		name = strings.TrimSuffix(name, configFileSuffix)
+		if !TunnelNameIsValid(name) {
 			continue
 		}
 		configs[i] = name

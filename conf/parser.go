@@ -6,16 +6,17 @@
 package conf
 
 import (
+	"bufio"
 	"encoding/base64"
-	"math"
-	"net/netip"
+	"encoding/hex"
+	"io"
+	"net"
 	"strconv"
 	"strings"
+	"time"
 
-	"golang.org/x/sys/windows"
 	"golang.org/x/text/encoding/unicode"
 
-	"github.com/amnezia-vpn/awg-windows/driver"
 	"github.com/amnezia-vpn/awg-windows/l18n"
 )
 
@@ -28,16 +29,43 @@ func (e *ParseError) Error() string {
 	return l18n.Sprintf("%s: %q", e.why, e.offender)
 }
 
-func parseIPCidr(s string) (netip.Prefix, error) {
-	ipcidr, err := netip.ParsePrefix(s)
-	if err == nil {
-		return ipcidr, nil
+func parseIPCidr(s string) (ipcidr *IPCidr, err error) {
+	var addrStr, cidrStr string
+	var cidr int
+
+	i := strings.IndexByte(s, '/')
+	if i < 0 {
+		addrStr = s
+	} else {
+		addrStr, cidrStr = s[:i], s[i+1:]
 	}
-	addr, err := netip.ParseAddr(s)
-	if err != nil {
-		return netip.Prefix{}, &ParseError{l18n.Sprintf("Invalid IP address: "), s}
+
+	err = &ParseError{l18n.Sprintf("Invalid IP address"), s}
+	addr := net.ParseIP(addrStr)
+	if addr == nil {
+		return
 	}
-	return netip.PrefixFrom(addr, addr.BitLen()), nil
+	maybeV4 := addr.To4()
+	if maybeV4 != nil {
+		addr = maybeV4
+	}
+	if len(cidrStr) > 0 {
+		err = &ParseError{l18n.Sprintf("Invalid network prefix length"), s}
+		cidr, err = strconv.Atoi(cidrStr)
+		if err != nil || cidr < 0 || cidr > 128 {
+			return
+		}
+		if cidr > 32 && maybeV4 != nil {
+			return
+		}
+	} else {
+		if maybeV4 != nil {
+			cidr = 32
+		} else {
+			cidr = 128
+		}
+	}
+	return &IPCidr{addr, uint8(cidr)}, nil
 }
 
 func parseEndpoint(s string) (*Endpoint, error) {
@@ -61,8 +89,8 @@ func parseEndpoint(s string) (*Endpoint, error) {
 			if i := strings.LastIndexByte(host, '%'); i > 1 {
 				end = i
 			}
-			maybeV6, err2 := netip.ParseAddr(host[1:end])
-			if err2 != nil || !maybeV6.Is6() {
+			maybeV6 := net.ParseIP(host[1:end])
+			if maybeV6 == nil || len(maybeV6) != net.IPv6len {
 				return nil, err
 			}
 		} else {
@@ -70,7 +98,7 @@ func parseEndpoint(s string) (*Endpoint, error) {
 		}
 		host = host[1 : len(host)-1]
 	}
-	return &Endpoint{host, port}, nil
+	return &Endpoint{host, uint16(port)}, nil
 }
 
 func parseMTU(s string) (uint16, error) {
@@ -93,28 +121,6 @@ func parsePort(s string) (uint16, error) {
 		return 0, &ParseError{l18n.Sprintf("Invalid port"), s}
 	}
 	return uint16(m), nil
-}
-
-func parseUint16(value, name string) (uint16, error) {
-	m, err := strconv.Atoi(value)
-	if err != nil {
-		return 0, err
-	}
-	if m < 0 || m > math.MaxUint16 {
-		return 0, &ParseError{l18n.Sprintf("Invalid %s", name), value}
-	}
-	return uint16(m), nil
-}
-
-func parseUint32(value, name string) (uint32, error) {
-	m, err := strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		return 0, err
-	}
-	if m < 0 || m > math.MaxUint32 {
-		return 0, &ParseError{l18n.Sprintf("Invalid %s", name), value}
-	}
-	return uint32(m), nil
 }
 
 func parsePersistentKeepalive(s string) (uint16, error) {
@@ -154,6 +160,27 @@ func parseKeyBase64(s string) (*Key, error) {
 	return &key, nil
 }
 
+func parseKeyHex(s string) (*Key, error) {
+	k, err := hex.DecodeString(s)
+	if err != nil {
+		return nil, &ParseError{l18n.Sprintf("Invalid key: %v", err), s}
+	}
+	if len(k) != KeyLength {
+		return nil, &ParseError{l18n.Sprintf("Keys must decode to exactly 32 bytes"), s}
+	}
+	var key Key
+	copy(key[:], k)
+	return &key, nil
+}
+
+func parseBytesOrStamp(s string) (uint64, error) {
+	b, err := strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		return 0, &ParseError{l18n.Sprintf("Number must be a number between 0 and 2^64-1: %v", err), s}
+	}
+	return b, nil
+}
+
 func splitList(s string) ([]string, error) {
 	var out []string
 	for _, split := range strings.Split(s, ",") {
@@ -180,7 +207,7 @@ func (c *Config) maybeAddPeer(p *Peer) {
 	}
 }
 
-func FromWgQuick(s, name string) (*Config, error) {
+func FromWgQuick(s string, name string) (*Config, error) {
 	if !TunnelNameIsValid(name) {
 		return nil, &ParseError{l18n.Sprintf("Tunnel name is not valid"), name}
 	}
@@ -236,66 +263,6 @@ func FromWgQuick(s, name string) (*Config, error) {
 					return nil, err
 				}
 				conf.Interface.ListenPort = p
-			case "jc":
-				junkPacketCount, err := parseUint16(val, "junkPacketCount")
-				if err != nil {
-					return nil, err
-				}
-				conf.Interface.JunkPacketCount = junkPacketCount
-			case "jmin":
-				junkPacketMinSize, err := parseUint16(val, "junkPacketMinSize")
-				if err != nil {
-					return nil, err
-				}
-				conf.Interface.JunkPacketMinSize = junkPacketMinSize
-			case "jmax":
-				junkPacketMaxSize, err := parseUint16(val, "junkPacketMaxSize")
-				if err != nil {
-					return nil, err
-				}
-				conf.Interface.JunkPacketMaxSize = junkPacketMaxSize
-			case "s1":
-				initPacketJunkSize, err := parseUint16(
-					val,
-					"initPacketJunkSize",
-				)
-				if err != nil {
-					return nil, err
-				}
-				conf.Interface.InitPacketJunkSize = initPacketJunkSize
-			case "s2":
-				responsePacketJunkSize, err := parseUint16(
-					val,
-					"responsePacketJunkSize",
-				)
-				if err != nil {
-					return nil, err
-				}
-				conf.Interface.ResponsePacketJunkSize = responsePacketJunkSize
-			case "h1":
-				initPacketMagicHeader, err := parseUint32(val, "initPacketMagicHeader")
-				if err != nil {
-					return nil, err
-				}
-				conf.Interface.InitPacketMagicHeader = initPacketMagicHeader
-			case "h2":
-				responsePacketMagicHeader, err := parseUint32(val, "responsePacketMagicHeader")
-				if err != nil {
-					return nil, err
-				}
-				conf.Interface.ResponsePacketMagicHeader = responsePacketMagicHeader
-			case "h3":
-				underloadPacketMagicHeader, err := parseUint32(val, "underloadPacketMagicHeader")
-				if err != nil {
-					return nil, err
-				}
-				conf.Interface.UnderloadPacketMagicHeader = underloadPacketMagicHeader
-			case "h4":
-				transportPacketMagicHeader, err := parseUint32(val, "transportPacketMagicHeader")
-				if err != nil {
-					return nil, err
-				}
-				conf.Interface.TransportPacketMagicHeader = transportPacketMagicHeader
 			case "mtu":
 				m, err := parseMTU(val)
 				if err != nil {
@@ -312,7 +279,7 @@ func FromWgQuick(s, name string) (*Config, error) {
 					if err != nil {
 						return nil, err
 					}
-					conf.Interface.Addresses = append(conf.Interface.Addresses, a)
+					conf.Interface.Addresses = append(conf.Interface.Addresses, *a)
 				}
 			case "dns":
 				addresses, err := splitList(val)
@@ -320,8 +287,8 @@ func FromWgQuick(s, name string) (*Config, error) {
 					return nil, err
 				}
 				for _, address := range addresses {
-					a, err := netip.ParseAddr(address)
-					if err != nil {
+					a := net.ParseIP(address)
+					if a == nil {
 						conf.Interface.DNSSearch = append(conf.Interface.DNSSearch, address)
 					} else {
 						conf.Interface.DNS = append(conf.Interface.DNS, a)
@@ -368,7 +335,7 @@ func FromWgQuick(s, name string) (*Config, error) {
 					if err != nil {
 						return nil, err
 					}
-					peer.AllowedIPs = append(peer.AllowedIPs, a)
+					peer.AllowedIPs = append(peer.AllowedIPs, *a)
 				}
 			case "persistentkeepalive":
 				p, err := parsePersistentKeepalive(val)
@@ -401,7 +368,7 @@ func FromWgQuick(s, name string) (*Config, error) {
 	return &conf, nil
 }
 
-func FromWgQuickWithUnknownEncoding(s, name string) (*Config, error) {
+func FromWgQuickWithUnknownEncoding(s string, name string) (*Config, error) {
 	c, firstErr := FromWgQuick(s, name)
 	if firstErr == nil {
 		return c, nil
@@ -418,7 +385,8 @@ func FromWgQuickWithUnknownEncoding(s, name string) (*Config, error) {
 	return nil, firstErr
 }
 
-func FromDriverConfiguration(interfaze *driver.Interface, existingConfig *Config) *Config {
+func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
+	parserState := inInterfaceSection
 	conf := Config{
 		Name: existingConfig.Name,
 		Interface: Interface{
@@ -433,81 +401,123 @@ func FromDriverConfiguration(interfaze *driver.Interface, existingConfig *Config
 			TableOff:  existingConfig.Interface.TableOff,
 		},
 	}
-	if interfaze.Flags&driver.InterfaceHasPrivateKey != 0 {
-		conf.Interface.PrivateKey = interfaze.PrivateKey
-	}
-	if interfaze.Flags&driver.InterfaceHasListenPort != 0 {
-		conf.Interface.ListenPort = interfaze.ListenPort
-	}
-	if interfaze.Flags&driver.InterfaceHasJc != 0 {
-		conf.Interface.JunkPacketCount = interfaze.Jc
-	}
-	if interfaze.Flags&driver.InterfaceHasJmin != 0 {
-		conf.Interface.JunkPacketMinSize = interfaze.Jmin
-	}
-	if interfaze.Flags&driver.InterfaceHasJmax != 0 {
-		conf.Interface.JunkPacketMaxSize = interfaze.Jmax
-	}
-	if interfaze.Flags&driver.InterfaceHasS1 != 0 {
-		conf.Interface.InitPacketJunkSize = interfaze.S1
-	}
-	if interfaze.Flags&driver.InterfaceHasS2 != 0 {
-		conf.Interface.ResponsePacketJunkSize = interfaze.S2
-	}
-	if interfaze.Flags&driver.InterfaceHasH1 != 0 {
-		conf.Interface.InitPacketMagicHeader = interfaze.H1
-	}
-	if interfaze.Flags&driver.InterfaceHasH2 != 0 {
-		conf.Interface.ResponsePacketMagicHeader = interfaze.H2
-	}
-	if interfaze.Flags&driver.InterfaceHasH3 != 0 {
-		conf.Interface.UnderloadPacketMagicHeader = interfaze.H3
-	}
-	if interfaze.Flags&driver.InterfaceHasH4 != 0 {
-		conf.Interface.TransportPacketMagicHeader = interfaze.H4
-	}
-	var p *driver.Peer
-	for i := uint32(0); i < interfaze.PeerCount; i++ {
-		if p == nil {
-			p = interfaze.FirstPeer()
-		} else {
-			p = p.NextPeer()
+	var peer *Peer
+	lineReader := bufio.NewReader(reader)
+	for {
+		line, err := lineReader.ReadString('\n')
+		if err != nil {
+			return nil, err
 		}
-		peer := Peer{}
-		if p.Flags&driver.PeerHasPublicKey != 0 {
-			peer.PublicKey = p.PublicKey
+		line = line[:len(line)-1]
+		if len(line) == 0 {
+			break
 		}
-		if p.Flags&driver.PeerHasPresharedKey != 0 {
-			peer.PresharedKey = p.PresharedKey
+		equals := strings.IndexByte(line, '=')
+		if equals < 0 {
+			return nil, &ParseError{l18n.Sprintf("Config key is missing an equals separator"), line}
 		}
-		if p.Flags&driver.PeerHasEndpoint != 0 {
-			peer.Endpoint.Port = p.Endpoint.Port()
-			peer.Endpoint.Host = p.Endpoint.Addr().String()
+		key, val := line[:equals], line[equals+1:]
+		if len(val) == 0 {
+			return nil, &ParseError{l18n.Sprintf("Key must have a value"), line}
 		}
-		if p.Flags&driver.PeerHasPersistentKeepalive != 0 {
-			peer.PersistentKeepalive = p.PersistentKeepalive
-		}
-		peer.TxBytes = Bytes(p.TxBytes)
-		peer.RxBytes = Bytes(p.RxBytes)
-		if p.LastHandshake != 0 {
-			peer.LastHandshakeTime = HandshakeTime((p.LastHandshake - 116444736000000000) * 100)
-		}
-		var a *driver.AllowedIP
-		for j := uint32(0); j < p.AllowedIPsCount; j++ {
-			if a == nil {
-				a = p.FirstAllowedIP()
+		switch key {
+		case "public_key":
+			conf.maybeAddPeer(peer)
+			peer = &Peer{}
+			parserState = inPeerSection
+		case "errno":
+			if val == "0" {
+				continue
 			} else {
-				a = a.NextAllowedIP()
+				return nil, &ParseError{l18n.Sprintf("Error in getting configuration"), val}
 			}
-			var ip netip.Addr
-			if a.AddressFamily == windows.AF_INET {
-				ip = netip.AddrFrom4(*(*[4]byte)(a.Address[:4]))
-			} else if a.AddressFamily == windows.AF_INET6 {
-				ip = netip.AddrFrom16(*(*[16]byte)(a.Address[:16]))
-			}
-			peer.AllowedIPs = append(peer.AllowedIPs, netip.PrefixFrom(ip, int(a.Cidr)))
 		}
-		conf.Peers = append(conf.Peers, peer)
+		if parserState == inInterfaceSection {
+			switch key {
+			case "private_key":
+				k, err := parseKeyHex(val)
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.PrivateKey = *k
+			case "listen_port":
+				p, err := parsePort(val)
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.ListenPort = p
+			case "fwmark":
+				// Ignored for now.
+
+			default:
+				return nil, &ParseError{l18n.Sprintf("Invalid key for interface section"), key}
+			}
+		} else if parserState == inPeerSection {
+			switch key {
+			case "public_key":
+				k, err := parseKeyHex(val)
+				if err != nil {
+					return nil, err
+				}
+				peer.PublicKey = *k
+			case "preshared_key":
+				k, err := parseKeyHex(val)
+				if err != nil {
+					return nil, err
+				}
+				peer.PresharedKey = *k
+			case "protocol_version":
+				if val != "1" {
+					return nil, &ParseError{l18n.Sprintf("Protocol version must be 1"), val}
+				}
+			case "allowed_ip":
+				a, err := parseIPCidr(val)
+				if err != nil {
+					return nil, err
+				}
+				peer.AllowedIPs = append(peer.AllowedIPs, *a)
+			case "persistent_keepalive_interval":
+				p, err := parsePersistentKeepalive(val)
+				if err != nil {
+					return nil, err
+				}
+				peer.PersistentKeepalive = p
+			case "endpoint":
+				e, err := parseEndpoint(val)
+				if err != nil {
+					return nil, err
+				}
+				peer.Endpoint = *e
+			case "tx_bytes":
+				b, err := parseBytesOrStamp(val)
+				if err != nil {
+					return nil, err
+				}
+				peer.TxBytes = Bytes(b)
+			case "rx_bytes":
+				b, err := parseBytesOrStamp(val)
+				if err != nil {
+					return nil, err
+				}
+				peer.RxBytes = Bytes(b)
+			case "last_handshake_time_sec":
+				t, err := parseBytesOrStamp(val)
+				if err != nil {
+					return nil, err
+				}
+				peer.LastHandshakeTime += HandshakeTime(time.Duration(t) * time.Second)
+			case "last_handshake_time_nsec":
+				t, err := parseBytesOrStamp(val)
+				if err != nil {
+					return nil, err
+				}
+				peer.LastHandshakeTime += HandshakeTime(time.Duration(t) * time.Nanosecond)
+			default:
+				return nil, &ParseError{l18n.Sprintf("Invalid key for peer section"), key}
+			}
+		}
 	}
-	return &conf
+	conf.maybeAddPeer(peer)
+
+	return &conf, nil
 }

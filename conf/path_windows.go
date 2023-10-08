@@ -15,10 +15,8 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-var (
-	cachedConfigFileDir string
-	cachedRootDir       string
-)
+var cachedConfigFileDir string
+var cachedRootDir string
 
 func tunnelConfigurationsDirectory() (string, error) {
 	if cachedConfigFileDir != "" {
@@ -29,7 +27,7 @@ func tunnelConfigurationsDirectory() (string, error) {
 		return "", err
 	}
 	c := filepath.Join(root, "Configurations")
-	err = os.Mkdir(c, os.ModeDir|0o700)
+	err = os.Mkdir(c, os.ModeDir|0700)
 	if err != nil && !os.IsExist(err) {
 		return "", err
 	}
@@ -127,12 +125,4 @@ func RootDirectory(create bool) (string, error) {
 	}
 	cachedRootDir = data
 	return cachedRootDir, nil
-}
-
-func LogFile(createRoot bool) (string, error) {
-	root, err := RootDirectory(createRoot)
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(root, "log.bin"), nil
 }

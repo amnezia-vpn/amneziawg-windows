@@ -7,17 +7,23 @@ package ringlogger
 
 import (
 	"log"
+	"path/filepath"
 	"unsafe"
+
+	"github.com/amnezia-vpn/awg-windows/conf"
 )
 
 var Global *Ringlogger
 
-func InitGlobalLogger(file, tag string) error {
+func InitGlobalLogger(tag string) error {
 	if Global != nil {
 		return nil
 	}
-	var err error
-	Global, err = NewRinglogger(file, tag)
+	root, err := conf.RootDirectory(true)
+	if err != nil {
+		return err
+	}
+	Global, err = NewRinglogger(filepath.Join(root, "log.bin"), tag)
 	if err != nil {
 		return err
 	}
@@ -30,10 +36,8 @@ func InitGlobalLogger(file, tag string) error {
 //go:linkname overrideWrite runtime.overrideWrite
 var overrideWrite func(fd uintptr, p unsafe.Pointer, n int32) int32
 
-var (
-	globalBuffer         [maxLogLineLength - 1 - maxTagLength - 3]byte
-	globalBufferLocation int
-)
+var globalBuffer [maxLogLineLength - 1 - maxTagLength - 3]byte
+var globalBufferLocation int
 
 //go:nosplit
 func globalWrite(fd uintptr, p unsafe.Pointer, n int32) int32 {

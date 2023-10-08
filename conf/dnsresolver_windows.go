@@ -6,14 +6,13 @@
 package conf
 
 import (
+	"fmt"
 	"log"
-	"net/netip"
+	"net"
+	"syscall"
 	"time"
 	"unsafe"
 
-	"github.com/amnezia-vpn/awg-windows/tunnel/winipcfg"
-
-	"github.com/amnezia-vpn/awg-windows/services"
 	"golang.org/x/sys/windows"
 )
 
@@ -21,7 +20,8 @@ import (
 
 func resolveHostname(name string) (resolvedIPString string, err error) {
 	maxTries := 10
-	if services.StartedAtBoot() {
+	systemJustBooted := windows.DurationSinceBoot() <= time.Minute*4
+	if systemJustBooted {
 		maxTries *= 4
 	}
 	for i := 0; i < maxTries; i++ {
@@ -37,7 +37,7 @@ func resolveHostname(name string) (resolvedIPString string, err error) {
 			continue
 		}
 		var state uint32
-		if err == windows.WSAHOST_NOT_FOUND && services.StartedAtBoot() && !internetGetConnectedState(&state, 0) {
+		if err == windows.WSAHOST_NOT_FOUND && systemJustBooted && !internetGetConnectedState(&state, 0) {
 			log.Printf("Host not found when resolving %s, but no Internet connection available, sleeping for 4 seconds", name)
 			continue
 		}
@@ -66,35 +66,25 @@ func resolveHostnameOnce(name string) (resolvedIPString string, err error) {
 		return
 	}
 	defer windows.FreeAddrInfoW(result)
-	var v6 netip.Addr
+	ipv6 := ""
 	for ; result != nil; result = result.Next {
-		if result.Family != windows.AF_INET && result.Family != windows.AF_INET6 {
-			continue
-		}
-		addr := (*winipcfg.RawSockaddrInet)(unsafe.Pointer(result.Addr)).Addr()
-		if addr.Is4() {
-			return addr.String(), nil
-		} else if !v6.IsValid() && addr.Is6() {
-			v6 = addr
+		switch result.Family {
+		case windows.AF_INET:
+			return (net.IP)((*syscall.RawSockaddrInet4)(unsafe.Pointer(result.Addr)).Addr[:]).String(), nil
+		case windows.AF_INET6:
+			if len(ipv6) != 0 {
+				continue
+			}
+			a := (*syscall.RawSockaddrInet6)(unsafe.Pointer(result.Addr))
+			ipv6 = (net.IP)(a.Addr[:]).String()
+			if a.Scope_id != 0 {
+				ipv6 += fmt.Sprintf("%%%d", a.Scope_id)
+			}
 		}
 	}
-	if v6.IsValid() {
-		return v6.String(), nil
+	if len(ipv6) != 0 {
+		return ipv6, nil
 	}
 	err = windows.WSAHOST_NOT_FOUND
 	return
-}
-
-func (config *Config) ResolveEndpoints() error {
-	for i := range config.Peers {
-		if config.Peers[i].Endpoint.IsEmpty() {
-			continue
-		}
-		var err error
-		config.Peers[i].Endpoint.Host, err = resolveHostname(config.Peers[i].Endpoint.Host)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

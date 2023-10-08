@@ -18,10 +18,8 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-var (
-	migrating          sync.Mutex
-	lastMigrationTimer *time.Timer
-)
+var migrating sync.Mutex
+var lastMigrationTimer *time.Timer
 
 type MigrationCallback func(name, oldPath, newPath string)
 
@@ -55,7 +53,7 @@ func migrateUnencryptedConfigs(sharingBase int, migrated MigrationCallback) {
 		if err != nil {
 			continue
 		}
-		if info.Mode().Perm()&0o444 == 0 {
+		if info.Mode().Perm()&0444 == 0 {
 			continue
 		}
 

@@ -6,7 +6,6 @@
 package conf
 
 import (
-	"errors"
 	"regexp"
 	"strconv"
 	"strings"
@@ -18,13 +17,15 @@ var reservedNames = []string{
 	"LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
 }
 
-const (
-	serviceNameForbidden = "$"
-	netshellDllForbidden = "\\/:*?\"<>|\t"
-	specialChars         = "/\\<>:\"|?*\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x00"
-)
+const serviceNameForbidden = "$"
+const netshellDllForbidden = "\\/:*?\"<>|\t"
+const specialChars = "/\\<>:\"|?*\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x00"
 
-var allowedNameFormat = regexp.MustCompile("^[a-zA-Z0-9_=+.-]{1,32}$")
+var allowedNameFormat *regexp.Regexp
+
+func init() {
+	allowedNameFormat = regexp.MustCompile("^[a-zA-Z0-9_=+.-]{1,32}$")
+}
 
 func isReserved(name string) bool {
 	if len(name) == 0 {
@@ -33,14 +34,6 @@ func isReserved(name string) bool {
 	for _, reserved := range reservedNames {
 		if strings.EqualFold(name, reserved) {
 			return true
-		}
-		for i := len(name) - 1; i >= 0; i-- {
-			if name[i] == '.' {
-				if strings.EqualFold(name[:i], reserved) {
-					return true
-				}
-				break
-			}
 		}
 	}
 	return false
@@ -62,7 +55,6 @@ type naturalSortToken struct {
 	maybeString string
 	maybeNumber int
 }
-
 type naturalSortString struct {
 	originalString string
 	tokens         []naturalSortToken
@@ -117,11 +109,4 @@ func TunnelNameIsLess(a, b string) bool {
 		}
 	}
 	return false
-}
-
-func ServiceNameOfTunnel(tunnelName string) (string, error) {
-	if !TunnelNameIsValid(tunnelName) {
-		return "", errors.New("Tunnel name is not valid")
-	}
-	return "WireGuardTunnel$" + tunnelName, nil
 }

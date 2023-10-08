@@ -8,7 +8,7 @@ package firewall
 import (
 	"encoding/binary"
 	"errors"
-	"net/netip"
+	"net"
 	"runtime"
 	"unsafe"
 
@@ -582,6 +582,7 @@ func permitDHCPIPv6(session uintptr, baseObjects *baseObjects, weight uint8) err
 }
 
 func permitNdp(session uintptr, baseObjects *baseObjects, weight uint8) error {
+
 	/* TODO: actually handle the hop limit somehow! The rules should vaguely be:
 	 *  - icmpv6 133: must be outgoing, dst must be FF02::2/128, hop limit must be 255
 	 *  - icmpv6 134: must be incoming, src must be FE80::/10, hop limit must be 255
@@ -984,7 +985,7 @@ func blockAll(session uintptr, baseObjects *baseObjects, weight uint8) error {
 }
 
 // Block all DNS traffic except towards specified DNS servers.
-func blockDNS(except []netip.Addr, session uintptr, baseObjects *baseObjects, weightAllow, weightDeny uint8) error {
+func blockDNS(except []net.IP, session uintptr, baseObjects *baseObjects, weightAllow uint8, weightDeny uint8) error {
 	if weightDeny >= weightAllow {
 		return errors.New("The allow weight must be greater than the deny weight")
 	}
@@ -1105,7 +1106,8 @@ func blockDNS(except []netip.Addr, session uintptr, baseObjects *baseObjects, we
 	allowConditionsV4 := make([]wtFwpmFilterCondition0, 0, len(denyConditions)+len(except))
 	allowConditionsV4 = append(allowConditionsV4, denyConditions...)
 	for _, ip := range except {
-		if !ip.Is4() {
+		ip4 := ip.To4()
+		if ip4 == nil {
 			continue
 		}
 		allowConditionsV4 = append(allowConditionsV4, wtFwpmFilterCondition0{
@@ -1113,7 +1115,7 @@ func blockDNS(except []netip.Addr, session uintptr, baseObjects *baseObjects, we
 			matchType: cFWP_MATCH_EQUAL,
 			conditionValue: wtFwpConditionValue0{
 				_type: cFWP_UINT32,
-				value: uintptr(binary.BigEndian.Uint32(ip.AsSlice())),
+				value: uintptr(binary.BigEndian.Uint32(ip4)),
 			},
 		})
 	}
@@ -1122,10 +1124,11 @@ func blockDNS(except []netip.Addr, session uintptr, baseObjects *baseObjects, we
 	allowConditionsV6 := make([]wtFwpmFilterCondition0, 0, len(denyConditions)+len(except))
 	allowConditionsV6 = append(allowConditionsV6, denyConditions...)
 	for _, ip := range except {
-		if !ip.Is6() {
+		if ip.To4() != nil {
 			continue
 		}
-		address := wtFwpByteArray16{byteArray16: ip.As16()}
+		var address wtFwpByteArray16
+		copy(address.byteArray16[:], ip)
 		allowConditionsV6 = append(allowConditionsV6, wtFwpmFilterCondition0{
 			fieldKey:  cFWPM_CONDITION_IP_REMOTE_ADDRESS,
 			matchType: cFWP_MATCH_EQUAL,

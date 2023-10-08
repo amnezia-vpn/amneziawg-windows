@@ -83,10 +83,10 @@ func deterministicGUID(c *conf.Config) *windows.GUID {
 				if bi, bj := sortedAllowedIPs[i].Bits(), sortedAllowedIPs[j].Bits(); bi != bj {
 					return bi < bj
 				}
-				if sortedAllowedIPs[i].Bits() != sortedAllowedIPs[j].Bits() {
-					return sortedAllowedIPs[i].Bits() < sortedAllowedIPs[j].Bits()
+				if sortedAllowedIPs[i].Cidr != sortedAllowedIPs[j].Cidr {
+					return sortedAllowedIPs[i].Cidr < sortedAllowedIPs[j].Cidr
 				}
-				return sortedAllowedIPs[i].Addr().Compare(sortedAllowedIPs[j].Addr()) < 0
+				return bytes.Compare(sortedAllowedIPs[i].IP[:], sortedAllowedIPs[j].IP[:]) < 0
 			})
 			for _, allowedip := range sortedAllowedIPs {
 				b2String(allowedip.String())

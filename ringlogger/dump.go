@@ -6,17 +6,22 @@
 package ringlogger
 
 import (
-	"errors"
-	"fmt"
 	"io"
 	"os"
-	"time"
+	"path/filepath"
 
 	"golang.org/x/sys/windows"
+
+	"github.com/amnezia-vpn/awg-windows/conf"
 )
 
-func DumpTo(inPath string, out io.Writer, continuous bool) error {
-	file, err := os.Open(inPath)
+func DumpTo(out io.Writer, notSystem bool) error {
+	root, err := conf.RootDirectory(!notSystem)
+	if err != nil {
+		return err
+	}
+	path := filepath.Join(root, "log.bin")
+	file, err := os.Open(path)
 	if err != nil {
 		return err
 	}
@@ -31,26 +36,9 @@ func DumpTo(inPath string, out io.Writer, continuous bool) error {
 		return err
 	}
 	defer rl.Close()
-	if !continuous {
-		_, err = rl.WriteTo(out)
-		if err != nil {
-			return err
-		}
-	} else {
-		cursor := CursorAll
-		for {
-			var items []FollowLine
-			items, cursor = rl.FollowFromCursor(cursor)
-			for _, item := range items {
-				_, err = fmt.Fprintf(out, "%s: %s\n", item.Stamp.Format("2006-01-02 15:04:05.000000"), item.Line)
-				if errors.Is(err, io.EOF) {
-					return nil
-				} else if err != nil {
-					return err
-				}
-			}
-			time.Sleep(time.Millisecond * 100)
-		}
+	_, err = rl.WriteTo(out)
+	if err != nil {
+		return err
 	}
 	return nil
 }

@@ -11,7 +11,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"net/netip"
+	"net"
 	"strings"
 	"time"
 
@@ -22,16 +22,19 @@ import (
 
 const KeyLength = 32
 
+type IPCidr struct {
+	IP   net.IP
+	Cidr uint8
+}
+
 type Endpoint struct {
 	Host string
 	Port uint16
 }
 
-type (
-	Key           [KeyLength]byte
-	HandshakeTime time.Duration
-	Bytes         uint64
-)
+type Key [KeyLength]byte
+type HandshakeTime time.Duration
+type Bytes uint64
 
 type Config struct {
 	Name      string
@@ -41,32 +44,22 @@ type Config struct {
 
 type Interface struct {
 	PrivateKey Key
-	Addresses  []netip.Prefix
+	Addresses  []IPCidr
 	ListenPort uint16
 	MTU        uint16
-	DNS        []netip.Addr
+	DNS        []net.IP
 	DNSSearch  []string
 	PreUp      string
 	PostUp     string
 	PreDown    string
 	PostDown   string
 	TableOff   bool
-
-	JunkPacketCount            uint16
-	JunkPacketMinSize          uint16
-	JunkPacketMaxSize          uint16
-	InitPacketJunkSize         uint16
-	ResponsePacketJunkSize     uint16
-	InitPacketMagicHeader      uint32
-	ResponsePacketMagicHeader  uint32
-	UnderloadPacketMagicHeader uint32
-	TransportPacketMagicHeader uint32
 }
 
 type Peer struct {
 	PublicKey           Key
 	PresharedKey        Key
-	AllowedIPs          []netip.Prefix
+	AllowedIPs          []IPCidr
 	Endpoint            Endpoint
 	PersistentKeepalive uint16
 
@@ -75,44 +68,37 @@ type Peer struct {
 	LastHandshakeTime HandshakeTime
 }
 
-func (conf *Config) IntersectsWith(other *Config) bool {
-	allRoutes := make(map[netip.Prefix]bool, len(conf.Interface.Addresses)*2+len(conf.Peers)*3)
-	for _, a := range conf.Interface.Addresses {
-		allRoutes[netip.PrefixFrom(a.Addr(), a.Addr().BitLen())] = true
-		allRoutes[a.Masked()] = true
+func (r *IPCidr) String() string {
+	return fmt.Sprintf("%s/%d", r.IP.String(), r.Cidr)
+}
+
+func (r *IPCidr) Bits() uint8 {
+	if r.IP.To4() != nil {
+		return 32
 	}
-	for i := range conf.Peers {
-		for _, a := range conf.Peers[i].AllowedIPs {
-			allRoutes[a.Masked()] = true
-		}
+	return 128
+}
+
+func (r *IPCidr) IPNet() net.IPNet {
+	return net.IPNet{
+		IP:   r.IP,
+		Mask: net.CIDRMask(int(r.Cidr), int(r.Bits())),
 	}
-	for _, a := range other.Interface.Addresses {
-		if allRoutes[netip.PrefixFrom(a.Addr(), a.Addr().BitLen())] {
-			return true
-		}
-		if allRoutes[a.Masked()] {
-			return true
-		}
+}
+
+func (r *IPCidr) MaskSelf() {
+	bits := int(r.Bits())
+	mask := net.CIDRMask(int(r.Cidr), bits)
+	for i := 0; i < bits/8; i++ {
+		r.IP[i] &= mask[i]
 	}
-	for i := range other.Peers {
-		for _, a := range other.Peers[i].AllowedIPs {
-			if allRoutes[a.Masked()] {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 func (e *Endpoint) String() string {
-	if strings.IndexByte(e.Host, ':') != -1 {
+	if strings.IndexByte(e.Host, ':') > 0 {
 		return fmt.Sprintf("[%s]:%d", e.Host, e.Port)
 	}
 	return fmt.Sprintf("%s:%d", e.Host, e.Port)
-}
-
-func (k *Key) HexString() string {
-	return hex.EncodeToString(k[:])
 }
 
 func (e *Endpoint) IsEmpty() bool {
@@ -121,6 +107,10 @@ func (e *Endpoint) IsEmpty() bool {
 
 func (k *Key) String() string {
 	return base64.StdEncoding.EncodeToString(k[:])
+}
+
+func (k *Key) HexString() string {
+	return hex.EncodeToString(k[:])
 }
 
 func (k *Key) IsZero() bool {

@@ -9,30 +9,28 @@ import (
 	"bytes"
 	"log"
 	"net"
-	"net/netip"
 	"sort"
 
-	"github.com/amnezia-vpn/amnezia-wg/tun"
 	"golang.org/x/sys/windows"
+	"github.com/amnezia-vpn/amnezia-wg/tun"
 
 	"github.com/amnezia-vpn/awg-windows/conf"
 	"github.com/amnezia-vpn/awg-windows/tunnel/firewall"
 	"github.com/amnezia-vpn/awg-windows/tunnel/winipcfg"
 )
 
-func cleanupAddressesOnDisconnectedInterfaces(family winipcfg.AddressFamily, addresses []netip.Prefix) {
+func cleanupAddressesOnDisconnectedInterfaces(family winipcfg.AddressFamily, addresses []net.IPNet) {
 	if len(addresses) == 0 {
 		return
 	}
 	includedInAddresses := func(a net.IPNet) bool {
 		// TODO: this makes the whole algorithm O(n^2). But we can't stick net.IPNet in a Go hashmap. Bummer!
 		for _, addr := range addresses {
-			ipNetAddr := prefixToIPNet(addr)
-			ip := ipNetAddr.IP
+			ip := addr.IP
 			if ip4 := ip.To4(); ip4 != nil {
 				ip = ip4
 			}
-			mA, _ := ipNetAddr.Mask.Size()
+			mA, _ := addr.Mask.Size()
 			mB, _ := a.Mask.Size()
 			if bytes.Equal(ip, a.IP) && mA == mB {
 				return true
@@ -53,54 +51,10 @@ func cleanupAddressesOnDisconnectedInterfaces(family winipcfg.AddressFamily, add
 			ipnet := net.IPNet{IP: ip, Mask: net.CIDRMask(int(address.OnLinkPrefixLength), 8*len(ip))}
 			if includedInAddresses(ipnet) {
 				log.Printf("Cleaning up stale address %s from interface ‘%s’", ipnet.String(), iface.FriendlyName())
-				addr, _ := netip.AddrFromSlice(ip)
-				b := int(bits(ip))
-				iface.LUID.DeleteIPAddress(netip.PrefixFrom(addr, b) )
+				iface.LUID.DeleteIPAddress(ipnet)
 			}
 		}
 	}
-}
-func bits(ip net.IP) uint8 {
-	if ip.To4() != nil {
-		return 32
-	}
-	return 128
-}
-
-func prefixBits(prefix netip.Prefix) uint8 {
-	bits := uint8(32)
-	if prefix.Addr().Is6() {
-		bits = 128
-	}
-	return bits
-}
-
-func prefixToIP(prefix netip.Prefix) net.IP {
-	s := prefix.Addr().AsSlice()
-	return net.IP(s) 
-}
-
-func prefixToMask(prefix netip.Prefix) net.IPMask {
-	return prefixToIPNet(prefix).Mask
-}
-
-func prefixToIPNet(prefix netip.Prefix) net.IPNet{
-    ip := prefixToIP(prefix)
-	return net.IPNet{
-		IP: ip,
-		Mask: net.CIDRMask(prefix.Bits(), int(bits(ip))),
-	}
-}
-
-func maskPrefix(prefix netip.Prefix) netip.Prefix{
-	ip := prefixToIP(prefix)
-	b := int(bits(ip))
-	mask := net.CIDRMask(int(prefix.Bits()), b)
-	for i := 0; i < b/8; i++ {
-		ip[i] &= mask[i]
-	}
-	addr, _ := netip.AddrFromSlice(ip)
-	return netip.PrefixFrom(addr, b)
 }
 
 func configureInterface(family winipcfg.AddressFamily, conf *conf.Config, tun *tun.NativeTun) error {
@@ -111,12 +65,13 @@ func configureInterface(family winipcfg.AddressFamily, conf *conf.Config, tun *t
 		estimatedRouteCount += len(peer.AllowedIPs)
 	}
 	routes := make([]winipcfg.RouteData, 0, estimatedRouteCount)
-	addresses := make([]netip.Prefix, len(conf.Interface.Addresses))
+	addresses := make([]net.IPNet, len(conf.Interface.Addresses))
 	var haveV4Address, haveV6Address bool
-	for _, addr := range conf.Interface.Addresses {
-		if prefixBits(addr) == 32 {
+	for i, addr := range conf.Interface.Addresses {
+		addresses[i] = addr.IPNet()
+		if addr.Bits() == 32 {
 			haveV4Address = true
-		} else if prefixBits(addr) == 128 {
+		} else if addr.Bits() == 128 {
 			haveV6Address = true
 		}
 	}
@@ -125,27 +80,24 @@ func configureInterface(family winipcfg.AddressFamily, conf *conf.Config, tun *t
 	foundDefault6 := false
 	for _, peer := range conf.Peers {
 		for _, allowedip := range peer.AllowedIPs {
-			allowedip = maskPrefix(allowedip)
-			pBits := prefixBits(allowedip)
-			if (pBits == 32 && !haveV4Address) || (pBits == 128 && !haveV6Address) {
+			allowedip.MaskSelf()
+			if (allowedip.Bits() == 32 && !haveV4Address) || (allowedip.Bits() == 128 && !haveV6Address) {
 				continue
 			}
 			route := winipcfg.RouteData{
-				Destination: allowedip,
+				Destination: allowedip.IPNet(),
 				Metric:      0,
 			}
-			if pBits == 32 {
-				if allowedip.Bits() == 0 {
+			if allowedip.Bits() == 32 {
+				if allowedip.Cidr == 0 {
 					foundDefault4 = true
 				}
-				ipv4Zero, _ := netip.ParseAddr("0.0.0.0")
-				route.NextHop = ipv4Zero
-			} else if pBits == 128 {
-				if allowedip.Bits() == 0 {
+				route.NextHop = net.IPv4zero
+			} else if allowedip.Bits() == 128 {
+				if allowedip.Cidr == 0 {
 					foundDefault6 = true
 				}
-				ipv6Zero, _ := netip.ParseAddr("0000:0000:0000:0000:0000:0000:0000:0000")
-				route.NextHop = ipv6Zero
+				route.NextHop = net.IPv6zero
 			}
 			routes = append(routes, route)
 		}
@@ -165,22 +117,22 @@ func configureInterface(family winipcfg.AddressFamily, conf *conf.Config, tun *t
 		if routes[i].Metric != routes[j].Metric {
 			return routes[i].Metric < routes[j].Metric
 		}
-		if c := routes[i].NextHop.Compare(routes[j].NextHop); c != 0 {
+		if c := bytes.Compare(routes[i].NextHop, routes[j].NextHop); c != 0 {
 			return c < 0
 		}
-		if c := routes[i].Destination.Addr().Compare(routes[j].Destination.Addr()); c != 0 {
+		if c := bytes.Compare(routes[i].Destination.IP, routes[j].Destination.IP); c != 0 {
 			return c < 0
 		}
-		if c := bytes.Compare(prefixToMask(routes[i].Destination), prefixToMask(routes[j].Destination)); c != 0 {
+		if c := bytes.Compare(routes[i].Destination.Mask, routes[j].Destination.Mask); c != 0 {
 			return c < 0
 		}
 		return false
 	})
 	for i := 0; i < len(routes); i++ {
 		if i > 0 && routes[i].Metric == routes[i-1].Metric &&
-			(routes[i].NextHop.Compare(routes[i-1].NextHop) == 0) &&
-			(routes[i].Destination.Addr().Compare(routes[i-1].Destination.Addr()) == 0) &&
-			bytes.Equal(prefixToMask(routes[i].Destination), prefixToMask(routes[i-1].Destination)) {
+			bytes.Equal(routes[i].NextHop, routes[i-1].NextHop) &&
+			bytes.Equal(routes[i].Destination.IP, routes[i-1].Destination.IP) &&
+			bytes.Equal(routes[i].Destination.Mask, routes[i-1].Destination.Mask) {
 			continue
 		}
 		deduplicatedRoutes = append(deduplicatedRoutes, &routes[i])
@@ -222,8 +174,8 @@ func enableFirewall(conf *conf.Config, tun *tun.NativeTun) error {
 	if len(conf.Peers) == 1 && !conf.Interface.TableOff {
 	nextallowedip:
 		for _, allowedip := range conf.Peers[0].AllowedIPs {
-			if allowedip.Bits() == 0 {
-				for _, b := range prefixToIP(allowedip) {
+			if allowedip.Cidr == 0 {
+				for _, b := range allowedip.IP {
 					if b != 0 {
 						continue nextallowedip
 					}

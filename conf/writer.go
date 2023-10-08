@@ -7,13 +7,7 @@ package conf
 
 import (
 	"fmt"
-	"net/netip"
 	"strings"
-	"unsafe"
-
-	"github.com/amnezia-vpn/awg-windows/driver"
-	"github.com/amnezia-vpn/awg-windows/tunnel/winipcfg"
-	"golang.org/x/sys/windows"
 )
 
 func (conf *Config) ToWgQuick() string {
@@ -24,42 +18,6 @@ func (conf *Config) ToWgQuick() string {
 
 	if conf.Interface.ListenPort > 0 {
 		output.WriteString(fmt.Sprintf("ListenPort = %d\n", conf.Interface.ListenPort))
-	}
-
-	if conf.Interface.JunkPacketCount > 0 {
-		output.WriteString(fmt.Sprintf("Jc = %d\n", conf.Interface.JunkPacketCount))
-	}
-
-	if conf.Interface.JunkPacketMinSize > 0 {
-		output.WriteString(fmt.Sprintf("Jmin = %d\n", conf.Interface.JunkPacketMinSize))
-	}
-
-	if conf.Interface.JunkPacketMaxSize > 0 {
-		output.WriteString(fmt.Sprintf("Jmax = %d\n", conf.Interface.JunkPacketMaxSize))
-	}
-
-	if conf.Interface.InitPacketJunkSize > 0 {
-		output.WriteString(fmt.Sprintf("S1 = %d\n", conf.Interface.InitPacketJunkSize))
-	}
-
-	if conf.Interface.ResponsePacketJunkSize > 0 {
-		output.WriteString(fmt.Sprintf("S2 = %d\n", conf.Interface.ResponsePacketJunkSize))
-	}
-
-	if conf.Interface.InitPacketMagicHeader > 0 {
-		output.WriteString(fmt.Sprintf("H1 = %d\n", conf.Interface.InitPacketMagicHeader))
-	}
-
-	if conf.Interface.ResponsePacketMagicHeader > 0 {
-		output.WriteString(fmt.Sprintf("H2 = %d\n", conf.Interface.ResponsePacketMagicHeader))
-	}
-
-	if conf.Interface.UnderloadPacketMagicHeader > 0 {
-		output.WriteString(fmt.Sprintf("H3 = %d\n", conf.Interface.UnderloadPacketMagicHeader))
-	}
-
-	if conf.Interface.TransportPacketMagicHeader > 0 {
-		output.WriteString(fmt.Sprintf("H4 = %d\n", conf.Interface.TransportPacketMagicHeader))
 	}
 
 	if len(conf.Interface.Addresses) > 0 {
@@ -127,151 +85,12 @@ func (conf *Config) ToWgQuick() string {
 	return output.String()
 }
 
-func (config *Config) ToDriverConfiguration() (*driver.Interface, uint32) {
-	preallocation := unsafe.Sizeof(driver.Interface{}) + uintptr(len(config.Peers))*unsafe.Sizeof(driver.Peer{})
-	for i := range config.Peers {
-		preallocation += uintptr(len(config.Peers[i].AllowedIPs)) * unsafe.Sizeof(driver.AllowedIP{})
-	}
-	var c driver.ConfigBuilder
-	c.Preallocate(uint32(preallocation))
-	interfaceFlags := driver.InterfaceHasPrivateKey | driver.InterfaceHasListenPort
-	if config.Interface.JunkPacketCount > 0 {
-		interfaceFlags |= driver.InterfaceHasJc
-	}
-
-	if config.Interface.JunkPacketMinSize > 0 {
-		interfaceFlags |= driver.InterfaceHasJmin
-	}
-
-	if config.Interface.JunkPacketMaxSize > 0 {
-		interfaceFlags |= driver.InterfaceHasJmax
-	}
-
-	if config.Interface.InitPacketJunkSize > 0 {
-		interfaceFlags |= driver.InterfaceHasS1
-	}
-
-	if config.Interface.ResponsePacketJunkSize > 0 {
-		interfaceFlags |= driver.InterfaceHasS2
-	}
-
-	if config.Interface.InitPacketMagicHeader > 0 {
-		interfaceFlags |= driver.InterfaceHasH1
-	}
-
-	if config.Interface.ResponsePacketMagicHeader > 0 {
-		interfaceFlags |= driver.InterfaceHasH2
-	}
-
-	if config.Interface.UnderloadPacketMagicHeader > 0 {
-		interfaceFlags |= driver.InterfaceHasH3
-	}
-
-	if config.Interface.TransportPacketMagicHeader > 0 {
-		interfaceFlags |= driver.InterfaceHasH4
-	}
-
-	defaultInterface := driver.DefaultInterface{
-		Flags: interfaceFlags,
-		ListenPort: config.Interface.ListenPort,
-		PrivateKey: config.Interface.PrivateKey,
-		PeerCount:  uint32(len(config.Peers)),
-	}
-	
-	hasNewFields := interfaceFlags >= (1 << 4)
-	if hasNewFields {
-		c.AppendInterface(&driver.Interface{
-			DefaultInterface: defaultInterface,
-			Jc: config.Interface.JunkPacketCount,
-			Jmin: config.Interface.JunkPacketMinSize,
-			Jmax: config.Interface.JunkPacketMaxSize,
-			S1: config.Interface.InitPacketJunkSize,
-			S2: config.Interface.ResponsePacketJunkSize,
-			H1: config.Interface.InitPacketMagicHeader,
-			H2: config.Interface.ResponsePacketMagicHeader,
-			H3: config.Interface.UnderloadPacketMagicHeader,
-			H4: config.Interface.TransportPacketMagicHeader,
-		})
-	} else {
-		c.AppendDefaultInterface(&defaultInterface)
-	}
-	for i := range config.Peers {
-		flags := driver.PeerHasPublicKey | driver.PeerHasPersistentKeepalive
-		if !config.Peers[i].PresharedKey.IsZero() {
-			flags |= driver.PeerHasPresharedKey
-		}
-		var endpoint winipcfg.RawSockaddrInet
-		if !config.Peers[i].Endpoint.IsEmpty() {
-			addr, err := netip.ParseAddr(config.Peers[i].Endpoint.Host)
-			if err == nil {
-				flags |= driver.PeerHasEndpoint
-				endpoint.SetAddrPort(netip.AddrPortFrom(addr, config.Peers[i].Endpoint.Port))
-			}
-		}
-		c.AppendPeer(&driver.Peer{
-			Flags:               flags,
-			PublicKey:           config.Peers[i].PublicKey,
-			PresharedKey:        config.Peers[i].PresharedKey,
-			PersistentKeepalive: config.Peers[i].PersistentKeepalive,
-			Endpoint:            endpoint,
-			AllowedIPsCount:     uint32(len(config.Peers[i].AllowedIPs)),
-		})
-		for j := range config.Peers[i].AllowedIPs {
-			a := &driver.AllowedIP{Cidr: uint8(config.Peers[i].AllowedIPs[j].Bits())}
-			copy(a.Address[:], config.Peers[i].AllowedIPs[j].Addr().AsSlice())
-			if config.Peers[i].AllowedIPs[j].Addr().Is4() {
-				a.AddressFamily = windows.AF_INET
-			} else if config.Peers[i].AllowedIPs[j].Addr().Is6() {
-				a.AddressFamily = windows.AF_INET6
-			}
-			c.AppendAllowedIP(a)
-		}
-	}
-	return c.Interface()
-}
-
 func (conf *Config) ToUAPI() (uapi string, dnsErr error) {
 	var output strings.Builder
 	output.WriteString(fmt.Sprintf("private_key=%s\n", conf.Interface.PrivateKey.HexString()))
 
 	if conf.Interface.ListenPort > 0 {
 		output.WriteString(fmt.Sprintf("listen_port=%d\n", conf.Interface.ListenPort))
-	}
-
-	if conf.Interface.JunkPacketCount > 0 {
-		output.WriteString(fmt.Sprintf("jc=%d\n", conf.Interface.JunkPacketCount))
-	}
-	
-	if conf.Interface.JunkPacketMinSize > 0 {
-		output.WriteString(fmt.Sprintf("jmin=%d\n", conf.Interface.JunkPacketMinSize))
-	}
-	
-	if conf.Interface.JunkPacketMaxSize > 0 {
-		output.WriteString(fmt.Sprintf("jmax=%d\n", conf.Interface.JunkPacketMaxSize))
-	}
-	
-	if conf.Interface.InitPacketJunkSize > 0 {
-		output.WriteString(fmt.Sprintf("s1=%d\n", conf.Interface.InitPacketJunkSize))
-	}
-	
-	if conf.Interface.ResponsePacketJunkSize > 0 {
-		output.WriteString(fmt.Sprintf("s2=%d\n", conf.Interface.ResponsePacketJunkSize))
-	}
-	
-	if conf.Interface.InitPacketMagicHeader > 0 {
-		output.WriteString(fmt.Sprintf("h1=%d\n", conf.Interface.InitPacketMagicHeader))
-	}
-	
-	if conf.Interface.ResponsePacketMagicHeader > 0 {
-		output.WriteString(fmt.Sprintf("h2=%d\n", conf.Interface.ResponsePacketMagicHeader))
-	}
-	
-	if conf.Interface.UnderloadPacketMagicHeader > 0 {
-		output.WriteString(fmt.Sprintf("h3=%d\n", conf.Interface.UnderloadPacketMagicHeader))
-	}
-	
-	if conf.Interface.TransportPacketMagicHeader > 0 {
-		output.WriteString(fmt.Sprintf("h4=%d\n", conf.Interface.TransportPacketMagicHeader))
 	}
 
 	if len(conf.Peers) > 0 {

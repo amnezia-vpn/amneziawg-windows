@@ -7,6 +7,7 @@ package services
 
 import (
 	"fmt"
+	"syscall"
 
 	"golang.org/x/sys/windows"
 )
@@ -17,13 +18,12 @@ const (
 	ErrorSuccess Error = iota
 	ErrorRingloggerOpen
 	ErrorLoadConfiguration
-	ErrorCreateNetworkAdapter
+	ErrorCreateWintun
+	ErrorUAPIListen
 	ErrorDNSLookup
 	ErrorFirewall
 	ErrorDeviceSetConfig
-	ErrorDeviceBringUp
 	ErrorBindSocketsToDefaultRoutes
-	ErrorMonitorMTUChanges
 	ErrorSetNetConfig
 	ErrorDetermineExecutablePath
 	ErrorTrackTunnels
@@ -31,8 +31,6 @@ const (
 	ErrorDropPrivileges
 	ErrorRunScript
 	ErrorWin32
-	ErrorCreateWintun
-	ErrorUAPIListen
 )
 
 func (e Error) Error() string {
@@ -45,22 +43,20 @@ func (e Error) Error() string {
 		return "Unable to determine path of running executable"
 	case ErrorLoadConfiguration:
 		return "Unable to load configuration from path"
-	case ErrorCreateNetworkAdapter:
-		return "Unable to create network adapter"
+	case ErrorCreateWintun:
+		return "Unable to create Wintun interface"
+	case ErrorUAPIListen:
+		return "Unable to listen on named pipe"
 	case ErrorDNSLookup:
 		return "Unable to resolve one or more DNS hostname endpoints"
 	case ErrorFirewall:
 		return "Unable to enable firewall rules"
 	case ErrorDeviceSetConfig:
 		return "Unable to set device configuration"
-	case ErrorDeviceBringUp:
-		return "Unable to bring up adapter"
 	case ErrorBindSocketsToDefaultRoutes:
 		return "Unable to bind sockets to default route"
-	case ErrorMonitorMTUChanges:
-		return "Unable to monitor default route MTU for changes"
 	case ErrorSetNetConfig:
-		return "Unable to configure adapter network settings"
+		return "Unable to set interface addresses, routes, dns, and/or interface settings"
 	case ErrorTrackTunnels:
 		return "Unable to track existing tunnels"
 	case ErrorEnumerateSessions:
@@ -71,17 +67,13 @@ func (e Error) Error() string {
 		return "An error occurred while running a configuration script command"
 	case ErrorWin32:
 		return "An internal Windows error has occurred"
-	case ErrorUAPIListen:
-		return "Unable to listen on named pipe"
-	case ErrorCreateWintun:
-		return "Unable to create Wintun interface"
 	default:
 		return "An unknown error has occurred"
 	}
 }
 
 func DetermineErrorCode(err error, serviceError Error) (bool, uint32) {
-	if syserr, ok := err.(windows.Errno); ok {
+	if syserr, ok := err.(syscall.Errno); ok {
 		return false, uint32(syserr)
 	} else if serviceError != ErrorSuccess {
 		return true, uint32(serviceError)

@@ -24,7 +24,7 @@ const (
 	cSEE_MASK_DEFAULT = 0
 )
 
-func ShellExecute(program, arguments, directory string, show int32) (err error) {
+func ShellExecute(program string, arguments string, directory string, show int32) (err error) {
 	var (
 		program16   *uint16
 		arguments16 *uint16
@@ -130,13 +130,13 @@ func ShellExecute(program, arguments, directory string, show int32) (err error) 
 		return
 	}
 
-	defer syscall.SyscallN((*interfacePointer)[releaseOffset], uintptr(unsafe.Pointer(interfacePointer)))
+	defer syscall.Syscall((*interfacePointer)[releaseOffset], 1, uintptr(unsafe.Pointer(interfacePointer)), 0, 0)
 
 	if program16 == nil {
 		return
 	}
 
-	if ret, _, _ := syscall.SyscallN((*interfacePointer)[shellExecuteOffset],
+	if ret, _, _ := syscall.Syscall6((*interfacePointer)[shellExecuteOffset], 6,
 		uintptr(unsafe.Pointer(interfacePointer)),
 		uintptr(unsafe.Pointer(program16)),
 		uintptr(unsafe.Pointer(arguments16)),

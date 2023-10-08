@@ -19,7 +19,7 @@ const (
 	policyExtensionOid = "2.5.29.32"
 )
 
-// These are easily by-passable checks, which do not serve security purposes.
+// These are easily by-passable checks, which do not serve serve security purposes.
 // DO NOT PLACE SECURITY-SENSITIVE FUNCTIONS IN THIS FILE
 
 func IsRunningOfficialVersion() bool {
@@ -101,7 +101,7 @@ func extractCertificateNames(path string) ([]string, error) {
 	return names, nil
 }
 
-func extractCertificatePolicies(path, oid string) ([]string, error) {
+func extractCertificatePolicies(path string, oid string) ([]string, error) {
 	path16, err := windows.UTF16PtrFromString(path)
 	if err != nil {
 		return nil, err
@@ -129,7 +129,8 @@ func extractCertificatePolicies(path, oid string) ([]string, error) {
 		if cert == nil {
 			break
 		}
-		ext := windows.CertFindExtension(oid8, cert.CertInfo.CountExtensions, cert.CertInfo.Extensions)
+		ci := (*windows.CertInfo)(unsafe.Pointer(cert.CertInfo))
+		ext := windows.CertFindExtension(oid8, ci.CountExtensions, ci.Extensions)
 		if ext == nil {
 			continue
 		}
@@ -145,7 +146,7 @@ func extractCertificatePolicies(path, oid string) ([]string, error) {
 			return nil, err
 		}
 		for i := uintptr(0); i < uintptr(certPoliciesInfo.Count); i++ {
-			cp := (*windows.CertPolicyInfo)(unsafe.Add(unsafe.Pointer(certPoliciesInfo.PolicyInfos), i*unsafe.Sizeof(*certPoliciesInfo.PolicyInfos)))
+			cp := (*windows.CertPolicyInfo)(unsafe.Pointer(uintptr(unsafe.Pointer(certPoliciesInfo.PolicyInfos)) + i*unsafe.Sizeof(*certPoliciesInfo.PolicyInfos)))
 			policies = append(policies, windows.BytePtrToString(cp.Identifier))
 		}
 	}

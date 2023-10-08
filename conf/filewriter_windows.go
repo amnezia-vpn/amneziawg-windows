@@ -8,7 +8,6 @@ package conf
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"path/filepath"
 	"sync/atomic"
 	"unsafe"
 
@@ -41,7 +40,7 @@ func writeLockedDownFile(destination string, overwrite bool, contents []byte) er
 	if err != nil {
 		return err
 	}
-	tmpDestination := filepath.Join(filepath.Dir(destination), randomFileName())
+	tmpDestination := randomFileName()
 	tmpDestination16, err := windows.UTF16PtrFromString(tmpDestination)
 	if err != nil {
 		return err

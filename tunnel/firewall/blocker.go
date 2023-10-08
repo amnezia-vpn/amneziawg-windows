@@ -7,7 +7,7 @@ package firewall
 
 import (
 	"errors"
-	"net/netip"
+	"net"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -101,7 +101,7 @@ func registerBaseObjects(session uintptr) (*baseObjects, error) {
 	return bo, nil
 }
 
-func EnableFirewall(luid uint64, doNotRestrict bool, restrictToDNSServers []netip.Addr) error {
+func EnableFirewall(luid uint64, doNotRestrict bool, restrictToDNSServers []net.IP) error {
 	if wfpSession != 0 {
 		return errors.New("The firewall has already been enabled")
 	}

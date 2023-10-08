@@ -45,11 +45,11 @@ type Ringlogger struct {
 	readOnly bool
 }
 
-func NewRinglogger(filename, tag string) (*Ringlogger, error) {
+func NewRinglogger(filename string, tag string) (*Ringlogger, error) {
 	if len(tag) > maxTagLength {
 		return nil, windows.ERROR_LABEL_TOO_LONG
 	}
-	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0o600)
+	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, err
 	}
@@ -63,14 +63,13 @@ func NewRinglogger(filename, tag string) (*Ringlogger, error) {
 	}
 	rl, err := newRingloggerFromMappingHandle(mapping, tag, windows.FILE_MAP_WRITE)
 	if err != nil {
-		windows.CloseHandle(mapping)
 		return nil, err
 	}
 	rl.file = file
 	return rl, nil
 }
 
-func NewRingloggerFromInheritedMappingHandle(handleStr, tag string) (*Ringlogger, error) {
+func NewRingloggerFromInheritedMappingHandle(handleStr string, tag string) (*Ringlogger, error) {
 	handle, err := strconv.ParseUint(handleStr, 10, 64)
 	if err != nil {
 		return nil, err
@@ -81,6 +80,10 @@ func NewRingloggerFromInheritedMappingHandle(handleStr, tag string) (*Ringlogger
 func newRingloggerFromMappingHandle(mappingHandle windows.Handle, tag string, access uint32) (*Ringlogger, error) {
 	view, err := windows.MapViewOfFile(mappingHandle, access, 0, 0, 0)
 	if err != nil {
+		return nil, err
+	}
+	if err != nil {
+		windows.CloseHandle(mappingHandle)
 		return nil, err
 	}
 	log := (*logMem)(unsafe.Pointer(view))
@@ -104,12 +107,6 @@ func newRingloggerFromMappingHandle(mappingHandle windows.Handle, tag string, ac
 }
 
 func (rl *Ringlogger) Write(p []byte) (n int, err error) {
-	// Race: This isn't synchronized with the fetch_add below, so items might be slightly out of order.
-	ts := time.Now().UnixNano()
-	return rl.WriteWithTimestamp(p, ts)
-}
-
-func (rl *Ringlogger) WriteWithTimestamp(p []byte, ts int64) (n int, err error) {
 	if rl.readOnly {
 		return 0, io.ErrShortWrite
 	}
@@ -118,6 +115,9 @@ func (rl *Ringlogger) WriteWithTimestamp(p []byte, ts int64) (n int, err error) 
 	if len(p) == 0 {
 		return ret, nil
 	}
+
+	// Race: This isn't synchronized with the fetch_add below, so items might be slightly out of order.
+	ts := time.Now().UnixNano()
 
 	if rl.log == nil {
 		return 0, io.EOF
