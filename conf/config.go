@@ -54,6 +54,16 @@ type Interface struct {
 	PreDown    string
 	PostDown   string
 	TableOff   bool
+
+	JunkPacketCount            uint16
+	JunkPacketMinSize          uint16
+	JunkPacketMaxSize          uint16
+	InitPacketJunkSize         uint16
+	ResponsePacketJunkSize     uint16
+	InitPacketMagicHeader      uint32
+	ResponsePacketMagicHeader  uint32
+	UnderloadPacketMagicHeader uint32
+	TransportPacketMagicHeader uint32
 }
 
 type Peer struct {

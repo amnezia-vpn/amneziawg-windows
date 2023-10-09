@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+        "math"
 
 	"golang.org/x/text/encoding/unicode"
 
@@ -121,6 +122,27 @@ func parsePort(s string) (uint16, error) {
 		return 0, &ParseError{l18n.Sprintf("Invalid port"), s}
 	}
 	return uint16(m), nil
+}
+
+func parseUint16(value, name string) (uint16, error) {
+	m, err := strconv.Atoi(value)
+	if err != nil {
+		return 0, err
+	}
+	if m < 0 || m > math.MaxUint16 {
+		return 0, &ParseError{l18n.Sprintf("Invalid %s", name), value}
+	}
+	return uint16(m), nil
+}
+func parseUint32(value, name string) (uint32, error) {
+	m, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	if m < 0 || m > math.MaxUint32 {
+		return 0, &ParseError{l18n.Sprintf("Invalid %s", name), value}
+	}
+	return uint32(m), nil
 }
 
 func parsePersistentKeepalive(s string) (uint16, error) {
@@ -263,6 +285,66 @@ func FromWgQuick(s string, name string) (*Config, error) {
 					return nil, err
 				}
 				conf.Interface.ListenPort = p
+			case "jc":
+				junkPacketCount, err := parseUint16(val, "junkPacketCount")
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.JunkPacketCount = junkPacketCount
+			case "jmin":
+				junkPacketMinSize, err := parseUint16(val, "junkPacketMinSize")
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.JunkPacketMinSize = junkPacketMinSize
+			case "jmax":
+				junkPacketMaxSize, err := parseUint16(val, "junkPacketMaxSize")
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.JunkPacketMaxSize = junkPacketMaxSize
+			case "s1":
+				initPacketJunkSize, err := parseUint16(
+					val,
+					"initPacketJunkSize",
+				)
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.InitPacketJunkSize = initPacketJunkSize
+			case "s2":
+				responsePacketJunkSize, err := parseUint16(
+					val,
+					"responsePacketJunkSize",
+				)
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.ResponsePacketJunkSize = responsePacketJunkSize
+			case "h1":
+				initPacketMagicHeader, err := parseUint32(val, "initPacketMagicHeader")
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.InitPacketMagicHeader = initPacketMagicHeader
+			case "h2":
+				responsePacketMagicHeader, err := parseUint32(val, "responsePacketMagicHeader")
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.ResponsePacketMagicHeader = responsePacketMagicHeader
+			case "h3":
+				underloadPacketMagicHeader, err := parseUint32(val, "underloadPacketMagicHeader")
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.UnderloadPacketMagicHeader = underloadPacketMagicHeader
+			case "h4":
+				transportPacketMagicHeader, err := parseUint32(val, "transportPacketMagicHeader")
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.TransportPacketMagicHeader = transportPacketMagicHeader
 			case "mtu":
 				m, err := parseMTU(val)
 				if err != nil {

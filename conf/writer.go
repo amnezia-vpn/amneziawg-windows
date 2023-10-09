@@ -20,6 +20,42 @@ func (conf *Config) ToWgQuick() string {
 		output.WriteString(fmt.Sprintf("ListenPort = %d\n", conf.Interface.ListenPort))
 	}
 
+	if conf.Interface.JunkPacketCount > 0 {
+		output.WriteString(fmt.Sprintf("Jc = %d\n", conf.Interface.JunkPacketCount))
+	}
+
+	if conf.Interface.JunkPacketMinSize > 0 {
+		output.WriteString(fmt.Sprintf("Jmin = %d\n", conf.Interface.JunkPacketMinSize))
+	}
+
+	if conf.Interface.JunkPacketMaxSize > 0 {
+		output.WriteString(fmt.Sprintf("Jmax = %d\n", conf.Interface.JunkPacketMaxSize))
+	}
+
+	if conf.Interface.InitPacketJunkSize > 0 {
+		output.WriteString(fmt.Sprintf("S1 = %d\n", conf.Interface.InitPacketJunkSize))
+	}
+
+	if conf.Interface.ResponsePacketJunkSize > 0 {
+		output.WriteString(fmt.Sprintf("S2 = %d\n", conf.Interface.ResponsePacketJunkSize))
+	}
+
+	if conf.Interface.InitPacketMagicHeader > 0 {
+		output.WriteString(fmt.Sprintf("H1 = %d\n", conf.Interface.InitPacketMagicHeader))
+	}
+
+	if conf.Interface.ResponsePacketMagicHeader > 0 {
+		output.WriteString(fmt.Sprintf("H2 = %d\n", conf.Interface.ResponsePacketMagicHeader))
+	}
+
+	if conf.Interface.UnderloadPacketMagicHeader > 0 {
+		output.WriteString(fmt.Sprintf("H3 = %d\n", conf.Interface.UnderloadPacketMagicHeader))
+	}
+
+	if conf.Interface.TransportPacketMagicHeader > 0 {
+		output.WriteString(fmt.Sprintf("H4 = %d\n", conf.Interface.TransportPacketMagicHeader))
+	}
+
 	if len(conf.Interface.Addresses) > 0 {
 		addrStrings := make([]string, len(conf.Interface.Addresses))
 		for i, address := range conf.Interface.Addresses {
@@ -91,6 +127,42 @@ func (conf *Config) ToUAPI() (uapi string, dnsErr error) {
 
 	if conf.Interface.ListenPort > 0 {
 		output.WriteString(fmt.Sprintf("listen_port=%d\n", conf.Interface.ListenPort))
+	}
+
+	if conf.Interface.JunkPacketCount > 0 {
+		output.WriteString(fmt.Sprintf("jc=%d\n", conf.Interface.JunkPacketCount))
+	}
+
+	if conf.Interface.JunkPacketMinSize > 0 {
+		output.WriteString(fmt.Sprintf("jmin=%d\n", conf.Interface.JunkPacketMinSize))
+	}
+
+	if conf.Interface.JunkPacketMaxSize > 0 {
+		output.WriteString(fmt.Sprintf("jmax=%d\n", conf.Interface.JunkPacketMaxSize))
+	}
+
+	if conf.Interface.InitPacketJunkSize > 0 {
+		output.WriteString(fmt.Sprintf("s1=%d\n", conf.Interface.InitPacketJunkSize))
+	}
+
+	if conf.Interface.ResponsePacketJunkSize > 0 {
+		output.WriteString(fmt.Sprintf("s2=%d\n", conf.Interface.ResponsePacketJunkSize))
+	}
+
+	if conf.Interface.InitPacketMagicHeader > 0 {
+		output.WriteString(fmt.Sprintf("h1=%d\n", conf.Interface.InitPacketMagicHeader))
+	}
+
+	if conf.Interface.ResponsePacketMagicHeader > 0 {
+		output.WriteString(fmt.Sprintf("h2=%d\n", conf.Interface.ResponsePacketMagicHeader))
+	}
+
+	if conf.Interface.UnderloadPacketMagicHeader > 0 {
+		output.WriteString(fmt.Sprintf("h3=%d\n", conf.Interface.UnderloadPacketMagicHeader))
+	}
+
+	if conf.Interface.TransportPacketMagicHeader > 0 {
+		output.WriteString(fmt.Sprintf("h4=%d\n", conf.Interface.TransportPacketMagicHeader))
 	}
 
 	if len(conf.Peers) > 0 {
