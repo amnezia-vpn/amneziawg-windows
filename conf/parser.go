@@ -237,6 +237,7 @@ func FromWgQuick(s string, name string) (*Config, error) {
 	parserState := notInASection
 	conf := Config{Name: name}
 	sawPrivateKey := false
+	conf.Interface.MTU = 1420
 	var peer *Peer
 	for _, line := range lines {
 		pound := strings.IndexByte(line, '#')
