@@ -14,13 +14,13 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/amnezia-vpn/amneziawg-go/conn"
+	"github.com/amnezia-vpn/amneziawg-go/device"
+	"github.com/amnezia-vpn/amneziawg-go/ipc"
+	"github.com/amnezia-vpn/amneziawg-go/tun"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/mgr"
-	"github.com/amnezia-vpn/amnezia-wg/conn"
-	"github.com/amnezia-vpn/amnezia-wg/device"
-	"github.com/amnezia-vpn/amnezia-wg/ipc"
-	"github.com/amnezia-vpn/amnezia-wg/tun"
 
 	"github.com/amnezia-vpn/awg-windows/conf"
 	"github.com/amnezia-vpn/awg-windows/elevate"
@@ -197,7 +197,7 @@ func (service *tunnelService) Execute(args []string, r <-chan svc.ChangeRequest,
 
 	log.Println("Creating interface instance")
 	bind := conn.NewDefaultBind()
-	dev = device.NewDevice(wintun, bind, &device.Logger{log.Printf, log.Printf})
+	dev = device.NewDevice(wintun, bind, &device.Logger{log.Printf, log.Printf}, false)
 
 	log.Println("Setting interface configuration")
 	uapi, err = ipc.UAPIListen(config.Name)

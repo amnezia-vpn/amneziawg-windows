@@ -12,8 +12,8 @@ import (
 
 	"golang.org/x/sys/windows"
 
-	"github.com/amnezia-vpn/amnezia-wg/conn"
-	"github.com/amnezia-vpn/amnezia-wg/tun"
+	"github.com/amnezia-vpn/amneziawg-go/conn"
+	"github.com/amnezia-vpn/amneziawg-go/tun"
 
 	"github.com/amnezia-vpn/awg-windows/conf"
 	"github.com/amnezia-vpn/awg-windows/services"
