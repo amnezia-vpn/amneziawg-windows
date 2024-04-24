@@ -1,6 +1,6 @@
 module github.com/amnezia-vpn/awg-windows
 
-go 1.16
+go 1.18
 
 require (
 	github.com/amnezia-vpn/amnezia-wg v0.1.8
