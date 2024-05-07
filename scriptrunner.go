@@ -47,7 +47,7 @@ func runScriptCommand(command, interfaceName string) error {
 	}
 	process, err := os.StartProcess(comspec, nil /* CmdLine below */, &os.ProcAttr{
 		Files: []*os.File{devNull, writer, writer},
-		Env:   append(os.Environ(), "WIREGUARD_TUNNEL_NAME="+interfaceName),
+		Env:   append(os.Environ(), "AMNEZIAWG_TUNNEL_NAME="+interfaceName),
 		Sys: &syscall.SysProcAttr{
 			HideWindow: true,
 			CmdLine:    fmt.Sprintf("cmd /c %s", command),
