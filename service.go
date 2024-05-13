@@ -14,24 +14,24 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/amnezia-vpn/amnezia-wg/conn"
-	"github.com/amnezia-vpn/amnezia-wg/device"
-	"github.com/amnezia-vpn/amnezia-wg/ipc"
-	"github.com/amnezia-vpn/amnezia-wg/tun"
+	"github.com/amnezia-vpn/amneziawg-go/conn"
+	"github.com/amnezia-vpn/amneziawg-go/device"
+	"github.com/amnezia-vpn/amneziawg-go/ipc"
+	"github.com/amnezia-vpn/amneziawg-go/tun"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/mgr"
 
-	"github.com/amnezia-vpn/awg-windows/conf"
-	"github.com/amnezia-vpn/awg-windows/elevate"
-	"github.com/amnezia-vpn/awg-windows/ringlogger"
-	"github.com/amnezia-vpn/awg-windows/services"
-	"github.com/amnezia-vpn/awg-windows/version"
+	"github.com/amnezia-vpn/amneziawg-windows/conf"
+	"github.com/amnezia-vpn/amneziawg-windows/elevate"
+	"github.com/amnezia-vpn/amneziawg-windows/ringlogger"
+	"github.com/amnezia-vpn/amneziawg-windows/services"
+	"github.com/amnezia-vpn/amneziawg-windows/version"
 )
 
 type tunnelService struct {
-	ConfString string;
-	TunnelName string;
+	ConfString string
+	TunnelName string
 }
 
 func (service *tunnelService) Execute(args []string, r <-chan svc.ChangeRequest, changes chan<- svc.Status) (svcSpecificEC bool, exitCode uint32) {
@@ -110,13 +110,12 @@ func (service *tunnelService) Execute(args []string, r <-chan svc.ChangeRequest,
 		return
 	}
 
-	config, err = conf.FromWgQuickWithUnknownEncoding(service.ConfString,service.TunnelName)
+	config, err = conf.FromWgQuickWithUnknownEncoding(service.ConfString, service.TunnelName)
 	if err != nil {
 		serviceError = services.ErrorLoadConfiguration
 		return
 	}
 	config.DeduplicateNetworkEntries()
-
 
 	log.SetPrefix(fmt.Sprintf("[%s] ", config.Name))
 
@@ -254,5 +253,5 @@ func (service *tunnelService) Execute(args []string, r <-chan svc.ChangeRequest,
 }
 
 func Run(confString string, tunnelName string) error {
-	return svc.Run(tunnelName, &tunnelService{confString,tunnelName})
+	return svc.Run(tunnelName, &tunnelService{confString, tunnelName})
 }

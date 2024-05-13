@@ -8,9 +8,9 @@ package tunnel
 import (
 	"golang.org/x/sys/windows"
 
-	"github.com/amnezia-vpn/amnezia-wg/ipc"
+	"github.com/amnezia-vpn/amneziawg-go/ipc"
 
-	"github.com/amnezia-vpn/awg-windows/conf"
+	"github.com/amnezia-vpn/amneziawg-windows/conf"
 )
 
 func CopyConfigOwnerToIPCSecurityDescriptor(filename string) error {

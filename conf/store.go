@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/amnezia-vpn/awg-windows/conf/dpapi"
+	"github.com/amnezia-vpn/amneziawg-windows/conf/dpapi"
 )
 
 const configFileSuffix = ".conf.dpapi"

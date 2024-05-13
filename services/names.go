@@ -8,7 +8,7 @@ package services
 import (
 	"errors"
 
-	"github.com/amnezia-vpn/awg-windows/conf"
+	"github.com/amnezia-vpn/amneziawg-windows/conf"
 )
 
 func ServiceNameOfTunnel(tunnelName string) (string, error) {
