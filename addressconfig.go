@@ -11,12 +11,12 @@ import (
 	"net"
 	"sort"
 
+	"github.com/amnezia-vpn/amneziawg-go/tun"
 	"golang.org/x/sys/windows"
-	"github.com/amnezia-vpn/amnezia-wg/tun"
 
-	"github.com/amnezia-vpn/awg-windows/conf"
-	"github.com/amnezia-vpn/awg-windows/tunnel/firewall"
-	"github.com/amnezia-vpn/awg-windows/tunnel/winipcfg"
+	"github.com/amnezia-vpn/amneziawg-windows/conf"
+	"github.com/amnezia-vpn/amneziawg-windows/tunnel/firewall"
+	"github.com/amnezia-vpn/amneziawg-windows/tunnel/winipcfg"
 )
 
 func cleanupAddressesOnDisconnectedInterfaces(family winipcfg.AddressFamily, addresses []net.IPNet) {

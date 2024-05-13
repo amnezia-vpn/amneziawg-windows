@@ -15,7 +15,7 @@ import (
 
 	"golang.org/x/sys/windows"
 
-	"github.com/amnezia-vpn/awg-windows/conf"
+	"github.com/amnezia-vpn/amneziawg-windows/conf"
 )
 
 func runScriptCommand(command, interfaceName string) error {

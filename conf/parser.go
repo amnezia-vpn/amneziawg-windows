@@ -10,15 +10,15 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"io"
+	"math"
 	"net"
 	"strconv"
 	"strings"
 	"time"
-        "math"
 
 	"golang.org/x/text/encoding/unicode"
 
-	"github.com/amnezia-vpn/awg-windows/l18n"
+	"github.com/amnezia-vpn/amneziawg-windows/l18n"
 )
 
 type ParseError struct {
