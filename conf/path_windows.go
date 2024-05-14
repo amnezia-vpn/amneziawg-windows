@@ -36,7 +36,7 @@ func tunnelConfigurationsDirectory() (string, error) {
 }
 
 // PresetRootDirectory causes RootDirectory() to not try any automatic deduction, and instead
-// uses what's passed to it. This isn't used by wireguard-windows, but is useful for external
+// uses what's passed to it. This isn't used by amneziawg-windows, but is useful for external
 // consumers of our libraries who might want to do strange things.
 func PresetRootDirectory(root string) {
 	cachedRootDir = root
@@ -50,7 +50,7 @@ func RootDirectory(create bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	root = filepath.Join(root, "WireGuard")
+	root = filepath.Join(root, "AmneziaWG")
 	if !create {
 		return filepath.Join(root, "Data"), nil
 	}
