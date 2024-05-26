@@ -473,15 +473,24 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 	conf := Config{
 		Name: existingConfig.Name,
 		Interface: Interface{
-			Addresses: existingConfig.Interface.Addresses,
-			DNS:       existingConfig.Interface.DNS,
-			DNSSearch: existingConfig.Interface.DNSSearch,
-			MTU:       existingConfig.Interface.MTU,
-			PreUp:     existingConfig.Interface.PreUp,
-			PostUp:    existingConfig.Interface.PostUp,
-			PreDown:   existingConfig.Interface.PreDown,
-			PostDown:  existingConfig.Interface.PostDown,
-			TableOff:  existingConfig.Interface.TableOff,
+			Addresses:                  existingConfig.Interface.Addresses,
+			DNS:                        existingConfig.Interface.DNS,
+			DNSSearch:                  existingConfig.Interface.DNSSearch,
+			MTU:                        existingConfig.Interface.MTU,
+			PreUp:                      existingConfig.Interface.PreUp,
+			PostUp:                     existingConfig.Interface.PostUp,
+			PreDown:                    existingConfig.Interface.PreDown,
+			PostDown:                   existingConfig.Interface.PostDown,
+			TableOff:                   existingConfig.Interface.TableOff,
+			JunkPacketCount:            existingConfig.Interface.JunkPacketCount,
+			JunkPacketMinSize:          existingConfig.Interface.JunkPacketMinSize,
+			JunkPacketMaxSize:          existingConfig.Interface.JunkPacketMaxSize,
+			InitPacketJunkSize:         existingConfig.Interface.InitPacketJunkSize,
+			ResponsePacketJunkSize:     existingConfig.Interface.ResponsePacketJunkSize,
+			InitPacketMagicHeader:      existingConfig.Interface.InitPacketMagicHeader,
+			ResponsePacketMagicHeader:  existingConfig.Interface.ResponsePacketMagicHeader,
+			UnderloadPacketMagicHeader: existingConfig.Interface.UnderloadPacketMagicHeader,
+			TransportPacketMagicHeader: existingConfig.Interface.TransportPacketMagicHeader,
 		},
 	}
 	var peer *Peer
@@ -529,6 +538,66 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 					return nil, err
 				}
 				conf.Interface.ListenPort = p
+			case "jc":
+				junkPacketCount, err := parseUint16(val, "junkPacketCount")
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.JunkPacketCount = junkPacketCount
+			case "jmin":
+				junkPacketMinSize, err := parseUint16(val, "junkPacketMinSize")
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.JunkPacketMinSize = junkPacketMinSize
+			case "jmax":
+				junkPacketMaxSize, err := parseUint16(val, "junkPacketMaxSize")
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.JunkPacketMaxSize = junkPacketMaxSize
+			case "s1":
+				initPacketJunkSize, err := parseUint16(
+					val,
+					"initPacketJunkSize",
+				)
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.InitPacketJunkSize = initPacketJunkSize
+			case "s2":
+				responsePacketJunkSize, err := parseUint16(
+					val,
+					"responsePacketJunkSize",
+				)
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.ResponsePacketJunkSize = responsePacketJunkSize
+			case "h1":
+				initPacketMagicHeader, err := parseUint32(val, "initPacketMagicHeader")
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.InitPacketMagicHeader = initPacketMagicHeader
+			case "h2":
+				responsePacketMagicHeader, err := parseUint32(val, "responsePacketMagicHeader")
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.ResponsePacketMagicHeader = responsePacketMagicHeader
+			case "h3":
+				underloadPacketMagicHeader, err := parseUint32(val, "underloadPacketMagicHeader")
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.UnderloadPacketMagicHeader = underloadPacketMagicHeader
+			case "h4":
+				transportPacketMagicHeader, err := parseUint32(val, "transportPacketMagicHeader")
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.TransportPacketMagicHeader = transportPacketMagicHeader
 			case "fwmark":
 				// Ignored for now.
 
