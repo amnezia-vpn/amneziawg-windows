@@ -14,19 +14,19 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/amnezia-vpn/amneziawg-go/conn"
-	"github.com/amnezia-vpn/amneziawg-go/device"
-	"github.com/amnezia-vpn/amneziawg-go/ipc"
-	"github.com/amnezia-vpn/amneziawg-go/tun"
+	"github.com/amnezia-vpn/euphoria/conn"
+	"github.com/amnezia-vpn/euphoria/device"
+	"github.com/amnezia-vpn/euphoria/ipc"
+	"github.com/amnezia-vpn/euphoria/tun"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/mgr"
 
-	"github.com/amnezia-vpn/amneziawg-windows/conf"
-	"github.com/amnezia-vpn/amneziawg-windows/elevate"
-	"github.com/amnezia-vpn/amneziawg-windows/ringlogger"
-	"github.com/amnezia-vpn/amneziawg-windows/services"
-	"github.com/amnezia-vpn/amneziawg-windows/version"
+	"github.com/amnezia-vpn/euphoria-windows/conf"
+	"github.com/amnezia-vpn/euphoria-windows/elevate"
+	"github.com/amnezia-vpn/euphoria-windows/ringlogger"
+	"github.com/amnezia-vpn/euphoria-windows/services"
+	"github.com/amnezia-vpn/euphoria-windows/version"
 )
 
 type tunnelService struct {

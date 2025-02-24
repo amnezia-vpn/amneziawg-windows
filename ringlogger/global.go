@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"unsafe"
 
-	"github.com/amnezia-vpn/amneziawg-windows/conf"
+	"github.com/amnezia-vpn/euphoria-windows/conf"
 )
 
 var Global *Ringlogger

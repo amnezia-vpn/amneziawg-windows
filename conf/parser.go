@@ -19,7 +19,7 @@ import (
 
 	"golang.org/x/text/encoding/unicode"
 
-	"github.com/amnezia-vpn/amneziawg-windows/l18n"
+	"github.com/amnezia-vpn/euphoria-windows/l18n"
 )
 
 type ParseError struct {

@@ -11,13 +11,13 @@ import (
 
 	"golang.org/x/sys/windows"
 
-	"github.com/amnezia-vpn/amneziawg-go/conn"
-	"github.com/amnezia-vpn/amneziawg-go/tun"
+	"github.com/amnezia-vpn/euphoria/conn"
+	"github.com/amnezia-vpn/euphoria/tun"
 
-	"github.com/amnezia-vpn/amneziawg-windows/conf"
-	"github.com/amnezia-vpn/amneziawg-windows/services"
-	"github.com/amnezia-vpn/amneziawg-windows/tunnel/firewall"
-	"github.com/amnezia-vpn/amneziawg-windows/tunnel/winipcfg"
+	"github.com/amnezia-vpn/euphoria-windows/conf"
+	"github.com/amnezia-vpn/euphoria-windows/services"
+	"github.com/amnezia-vpn/euphoria-windows/tunnel/firewall"
+	"github.com/amnezia-vpn/euphoria-windows/tunnel/winipcfg"
 )
 
 type interfaceWatcherError struct {

@@ -1,15 +1,13 @@
-module github.com/amnezia-vpn/amneziawg-windows
+module github.com/amnezia-vpn/euphoria-windows
 
-go 1.23
+go 1.24
 
 require (
-	github.com/amnezia-vpn/amneziawg-go v0.2.12
-	golang.org/x/crypto v0.33.0
+	github.com/amnezia-vpn/euphoria v0.1.0
+	golang.org/x/crypto v0.34.0
 	golang.org/x/sys v0.30.0
 	golang.org/x/text v0.22.0
 )
-
-replace github.com/amnezia-vpn/amneziawg-go v0.2.12 => github.com/marko1777/amneziawg-go v0.1.2
 
 require (
 	github.com/aarzilli/golua v0.0.0-20250217091409-248753f411c4 // indirect
