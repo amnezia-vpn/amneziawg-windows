@@ -17,7 +17,7 @@ import (
 
 	"golang.org/x/crypto/curve25519"
 
-	"github.com/amnezia-vpn/amneziawg-windows/l18n"
+	"github.com/amnezia-vpn/euphoria-windows/l18n"
 )
 
 const KeyLength = 32
@@ -64,6 +64,7 @@ type Interface struct {
 	ResponsePacketMagicHeader  uint32
 	UnderloadPacketMagicHeader uint32
 	TransportPacketMagicHeader uint32
+	LuaCodec				   string
 }
 
 type Peer struct {

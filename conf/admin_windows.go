@@ -7,7 +7,7 @@ package conf
 
 import "golang.org/x/sys/windows/registry"
 
-const adminRegKey = `Software\AmneziaWG`
+const adminRegKey = `Software\Euphoria`
 
 var adminKey registry.Key
 

@@ -1,4 +1,4 @@
-# Embeddable WireGuard Tunnel Library
+# Embeddable Euphoria Tunnel Library
 
 A simple yet effective way of leveraging the existing WireGuard codebase.
 This is more or less the same thing as the

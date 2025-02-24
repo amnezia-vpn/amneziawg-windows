@@ -9,6 +9,7 @@ import (
 	"bufio"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"io"
 	"math"
 	"net"
@@ -18,7 +19,7 @@ import (
 
 	"golang.org/x/text/encoding/unicode"
 
-	"github.com/amnezia-vpn/amneziawg-windows/l18n"
+	"github.com/amnezia-vpn/euphoria-windows/l18n"
 )
 
 type ParseError struct {
@@ -346,6 +347,12 @@ func FromWgQuick(s string, name string) (*Config, error) {
 					return nil, err
 				}
 				conf.Interface.TransportPacketMagicHeader = transportPacketMagicHeader
+			case "luacodec":
+				if len(val) == 0 {
+					return nil, errors.New("Cannot parse empty luacodec")
+				}
+				luaCodec := val
+				conf.Interface.LuaCodec = luaCodec
 			case "mtu":
 				m, err := parseMTU(val)
 				if err != nil {
@@ -491,6 +498,7 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 			ResponsePacketMagicHeader:  existingConfig.Interface.ResponsePacketMagicHeader,
 			UnderloadPacketMagicHeader: existingConfig.Interface.UnderloadPacketMagicHeader,
 			TransportPacketMagicHeader: existingConfig.Interface.TransportPacketMagicHeader,
+			LuaCodec:					existingConfig.Interface.LuaCodec,
 		},
 	}
 	var peer *Peer
@@ -598,6 +606,12 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 					return nil, err
 				}
 				conf.Interface.TransportPacketMagicHeader = transportPacketMagicHeader
+			case "lua_codec":
+				if len(val) == 0 {
+					return nil, errors.New("Cannot parse empty lua_codec")
+				}
+				luaCodec := val
+				conf.Interface.LuaCodec = luaCodec
 			case "fwmark":
 				// Ignored for now.
 
