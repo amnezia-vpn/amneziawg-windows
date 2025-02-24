@@ -17,7 +17,6 @@ if exist .deps\prepared goto :build
 	rem Mirror of https://github.com/mstorsjo/llvm-mingw/releases/download/20201020/llvm-mingw-20201020-msvcrt-x86_64.zip
 	call :download llvm-mingw-msvcrt.zip https://download.wireguard.com/windows-toolchain/distfiles/llvm-mingw-20201020-msvcrt-x86_64.zip 2e46593245090df96d15e360e092f0b62b97e93866e0162dca7f93b16722b844 || goto :error
 	call :download wintun.zip https://www.wintun.net/builds/wintun-0.14.1.zip 07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51 || goto :error
-	call :download lua-windows.zip https://github.com/marko1777/3rd-prebuilt/raw/refs/heads/master/3rd-prebuilt/amneziawg/windows/lua-windows.zip 0bbd996028722f683cb9cbb073465342eff44ca322a90fa2952dc473f2237ef5 || goto :error
 	copy /y NUL prepared > NUL || goto :error
 	cd .. || goto :error
 
@@ -52,7 +51,7 @@ if exist .deps\prepared goto :build
     set CC=%~2-w64-mingw32-gcc
 	set GOARCH=%~3
 	mkdir %1 >NUL 2>&1
-	set CGO_LDFLAGS=-L%BUILDDIR%.deps\lua-windows\%~1
+	set CGO_LDFLAGS=-L%BUILDDIR%\3rd-prebuilt\3rd-prebuilt\amneziawg\windows\%~1
 	echo [+] Building library %1
 	go build  -tags "luajit" -buildmode c-shared -ldflags="-w -s" -trimpath -v -o "%~1/tunnel.dll" || exit /b 1
 	del "%~1\tunnel.h"

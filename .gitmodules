@@ -1,0 +1,3 @@
+[submodule "3rd-prebuilt"]
+	path = 3rd-prebuilt
+	url = https://github.com/amnezia-vpn/3rd-prebuilt
