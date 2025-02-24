@@ -64,6 +64,7 @@ type Interface struct {
 	ResponsePacketMagicHeader  uint32
 	UnderloadPacketMagicHeader uint32
 	TransportPacketMagicHeader uint32
+	LuaCodec				   string
 }
 
 type Peer struct {
