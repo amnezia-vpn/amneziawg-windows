@@ -64,6 +64,10 @@ type Interface struct {
 	ResponsePacketMagicHeader  uint32
 	UnderloadPacketMagicHeader uint32
 	TransportPacketMagicHeader uint32
+	
+	IPackets map[string]string
+	JPackets map[string]string
+	ITime uint32
 }
 
 type Peer struct {
