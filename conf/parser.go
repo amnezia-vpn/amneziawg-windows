@@ -349,7 +349,7 @@ func FromWgQuick(s string, name string) (*Config, error) {
 				conf.Interface.TransportPacketMagicHeader = transportPacketMagicHeader
 			case "i1", "i2", "i3", "i4", "i5":
 				if len(val) == 0 {
-					return nil, fmt.Errorf("cannot parse empty i value: %s; for key: %s", val, key)
+					return nil, fmt.Errorf("cannot parse empty %s junk value: %s", key, val)
 				}
 				if conf.Interface.IPackets == nil {
 					conf.Interface.IPackets = make(map[string]string)
@@ -357,7 +357,7 @@ func FromWgQuick(s string, name string) (*Config, error) {
 				conf.Interface.IPackets[key] = val
 			case "j1", "j2", "j3":
 				if len(val) == 0 {
-					return nil, fmt.Errorf("cannot parse empty j value: %s; for key: %s", val, key)
+					return nil, fmt.Errorf("cannot parse empty %s junk value: %s", key, val)
 				}
 				if conf.Interface.JPackets == nil {
 					conf.Interface.JPackets = make(map[string]string)
@@ -366,7 +366,7 @@ func FromWgQuick(s string, name string) (*Config, error) {
 			case "itime":
 				itime, err := parseUint32(val, "itime")
 				if err != nil {
-					return nil, err
+					return nil, fmt.Errorf("itime parse uint32: %w", err)
 				}
 				conf.Interface.ITime = itime
 			case "mtu":
@@ -514,9 +514,9 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 			ResponsePacketMagicHeader:  existingConfig.Interface.ResponsePacketMagicHeader,
 			UnderloadPacketMagicHeader: existingConfig.Interface.UnderloadPacketMagicHeader,
 			TransportPacketMagicHeader: existingConfig.Interface.TransportPacketMagicHeader,
-			IPackets: existingConfig.Interface.IPackets,
-			JPackets: existingConfig.Interface.JPackets,
-			ITime: existingConfig.Interface.ITime,
+			IPackets:                   existingConfig.Interface.IPackets,
+			JPackets:                   existingConfig.Interface.JPackets,
+			ITime:                      existingConfig.Interface.ITime,
 		},
 	}
 	var peer *Peer
@@ -626,7 +626,7 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 				conf.Interface.TransportPacketMagicHeader = transportPacketMagicHeader
 			case "i1", "i2", "i3", "i4", "i5":
 				if len(val) == 0 {
-					return nil, fmt.Errorf("cannot parse empty i value: %s; for key: %s", val, key)
+					return nil, fmt.Errorf("cannot parse empty %s junk value: %s", key, val)
 				}
 				if conf.Interface.IPackets == nil {
 					conf.Interface.IPackets = make(map[string]string)
@@ -634,7 +634,7 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 				conf.Interface.IPackets[key] = val
 			case "j1", "j2", "j3":
 				if len(val) == 0 {
-					return nil, fmt.Errorf("cannot parse empty j value: %s; for key: %s", val, key)
+					return nil, fmt.Errorf("cannot parse empty %s junk value: %s", key, val)
 				}
 				if conf.Interface.JPackets == nil {
 					conf.Interface.JPackets = make(map[string]string)
@@ -643,7 +643,7 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 			case "itime":
 				itime, err := parseUint32(val, "itime")
 				if err != nil {
-					return nil, err
+					return nil, fmt.Errorf("itime parse uint32: %w", err)
 				}
 				conf.Interface.ITime = itime
 			case "fwmark":

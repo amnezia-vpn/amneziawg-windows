@@ -59,9 +59,11 @@ func (conf *Config) ToWgQuick() string {
 	for key, value := range conf.Interface.IPackets {
 		output.WriteString(fmt.Sprintf("%s = %s\n", strings.ToUpper(key), value))
 	}
+
 	for key, value := range conf.Interface.JPackets {
 		output.WriteString(fmt.Sprintf("%s = %s\n", strings.ToUpper(key), value))
 	}
+
 	if conf.Interface.ITime > 0 {
 		output.WriteString(fmt.Sprintf("Itime = %d\n", conf.Interface.ITime))
 	}
@@ -176,13 +178,15 @@ func (conf *Config) ToUAPI() (uapi string, dnsErr error) {
 	}
 
 	for key, value := range conf.Interface.IPackets {
-		output.WriteString(fmt.Sprintf("%s = %s\n", key, value))
+		output.WriteString(fmt.Sprintf("%s=%s\n", key, value))
 	}
+
 	for key, value := range conf.Interface.JPackets {
-		output.WriteString(fmt.Sprintf("%s = %s\n", key, value))
+		output.WriteString(fmt.Sprintf("%s=%s\n", key, value))
 	}
+
 	if conf.Interface.ITime > 0 {
-		output.WriteString(fmt.Sprintf("itime = %d\n", conf.Interface.ITime))
+		output.WriteString(fmt.Sprintf("itime=%d\n", conf.Interface.ITime))
 	}
 
 	if len(conf.Peers) > 0 {
