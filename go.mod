@@ -9,7 +9,7 @@ require (
 	golang.org/x/text v0.26.0
 )
 
-replace github.com/amnezia-vpn/amneziawg-go v0.2.12 => github.com/marko1777/amneziawg-go v1.0.0
+replace github.com/amnezia-vpn/amneziawg-go v0.2.12 => github.com/marko1777/amneziawg-go v1.0.1
 
 require (
 	github.com/tevino/abool v1.2.0 // indirect
