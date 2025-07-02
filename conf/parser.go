@@ -22,6 +22,17 @@ import (
 	"github.com/amnezia-vpn/amneziawg-windows/l18n"
 )
 
+var _specialHandshakeTags = map[string]struct{}{
+	"i1": struct{}{},	
+	"i2": struct{}{},	
+	"i3": struct{}{},	
+	"i4": struct{}{},	
+	"i5": struct{}{},	
+	"j1": struct{}{},	
+	"j2": struct{}{},	
+	"j3": struct{}{},	
+}
+
 type ParseError struct {
 	why      string
 	offender string
@@ -269,7 +280,7 @@ func FromWgQuick(s string, name string) (*Config, error) {
 			return nil, &ParseError{l18n.Sprintf("Config key is missing an equals separator"), line}
 		}
 		key, val := strings.TrimSpace(lineLower[:equals]), strings.TrimSpace(line[equals+1:])
-		if len(val) == 0 {
+		if _, ok := _specialHandshakeTags[key]; !ok && len(val) == 0 {
 			return nil, &ParseError{l18n.Sprintf("Key must have a value"), line}
 		}
 		if parserState == inInterfaceSection {
@@ -349,7 +360,7 @@ func FromWgQuick(s string, name string) (*Config, error) {
 				conf.Interface.TransportPacketMagicHeader = transportPacketMagicHeader
 			case "i1", "i2", "i3", "i4", "i5":
 				if len(val) == 0 {
-					return nil, fmt.Errorf("cannot parse empty %s junk value: %s", key, val)
+					continue
 				}
 				if conf.Interface.IPackets == nil {
 					conf.Interface.IPackets = make(map[string]string)
@@ -357,7 +368,7 @@ func FromWgQuick(s string, name string) (*Config, error) {
 				conf.Interface.IPackets[key] = val
 			case "j1", "j2", "j3":
 				if len(val) == 0 {
-					return nil, fmt.Errorf("cannot parse empty %s junk value: %s", key, val)
+					continue
 				}
 				if conf.Interface.JPackets == nil {
 					conf.Interface.JPackets = make(map[string]string)
