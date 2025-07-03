@@ -23,14 +23,15 @@ import (
 )
 
 var _specialHandshakeTags = map[string]struct{}{
-	"i1": struct{}{},	
-	"i2": struct{}{},	
-	"i3": struct{}{},	
-	"i4": struct{}{},	
-	"i5": struct{}{},	
-	"j1": struct{}{},	
-	"j2": struct{}{},	
-	"j3": struct{}{},	
+	"i1":    struct{}{},
+	"i2":    struct{}{},
+	"i3":    struct{}{},
+	"i4":    struct{}{},
+	"i5":    struct{}{},
+	"j1":    struct{}{},
+	"j2":    struct{}{},
+	"j3":    struct{}{},
+	"itime": struct{}{},
 }
 
 type ParseError struct {
