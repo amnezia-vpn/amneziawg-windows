@@ -60,6 +60,8 @@ type Interface struct {
 	JunkPacketMaxSize          uint16
 	InitPacketJunkSize         uint16
 	ResponsePacketJunkSize     uint16
+	CookieReplyPacketJunkSize  uint16
+	TransportPacketJunkSize    uint16
 	InitPacketMagicHeader      uint32
 	ResponsePacketMagicHeader  uint32
 	UnderloadPacketMagicHeader uint32
