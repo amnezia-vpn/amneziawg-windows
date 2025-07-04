@@ -3,13 +3,11 @@ module github.com/amnezia-vpn/amneziawg-windows
 go 1.24.4
 
 require (
-	github.com/amnezia-vpn/amneziawg-go v0.2.12
+	github.com/amnezia-vpn/amneziawg-go v0.2.13-0.20250704005745-c4c3d4ac244d
 	golang.org/x/crypto v0.39.0
 	golang.org/x/sys v0.33.0
 	golang.org/x/text v0.26.0
 )
-
-replace github.com/amnezia-vpn/amneziawg-go v0.2.12 => github.com/marko1777/amneziawg-go v1.0.3
 
 require (
 	github.com/tevino/abool v1.2.0 // indirect
