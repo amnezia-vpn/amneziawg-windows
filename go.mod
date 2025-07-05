@@ -3,7 +3,7 @@ module github.com/amnezia-vpn/amneziawg-windows
 go 1.24.4
 
 require (
-	github.com/amnezia-vpn/amneziawg-go v0.2.13-beta-awg-1.5-fix2
+	github.com/amnezia-vpn/amneziawg-go v0.2.13-beta-awg-1.5-fix6
 	golang.org/x/crypto v0.39.0
 	golang.org/x/sys v0.33.0
 	golang.org/x/text v0.26.0
