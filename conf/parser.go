@@ -9,6 +9,7 @@ import (
 	"bufio"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"math"
 	"net"
@@ -20,6 +21,18 @@ import (
 
 	"github.com/amnezia-vpn/amneziawg-windows/l18n"
 )
+
+var _specialHandshakeTags = map[string]struct{}{
+	"i1":    struct{}{},
+	"i2":    struct{}{},
+	"i3":    struct{}{},
+	"i4":    struct{}{},
+	"i5":    struct{}{},
+	"j1":    struct{}{},
+	"j2":    struct{}{},
+	"j3":    struct{}{},
+	"itime": struct{}{},
+}
 
 type ParseError struct {
 	why      string
@@ -268,7 +281,7 @@ func FromWgQuick(s string, name string) (*Config, error) {
 			return nil, &ParseError{l18n.Sprintf("Config key is missing an equals separator"), line}
 		}
 		key, val := strings.TrimSpace(lineLower[:equals]), strings.TrimSpace(line[equals+1:])
-		if len(val) == 0 {
+		if _, ok := _specialHandshakeTags[key]; !ok && len(val) == 0 {
 			return nil, &ParseError{l18n.Sprintf("Key must have a value"), line}
 		}
 		if parserState == inInterfaceSection {
@@ -322,6 +335,24 @@ func FromWgQuick(s string, name string) (*Config, error) {
 					return nil, err
 				}
 				conf.Interface.ResponsePacketJunkSize = responsePacketJunkSize
+			case "s3":
+				cookieReplyJunkSize, err := parseUint16(
+					val,
+					"cookieReplyPacketJunkSize",
+				)
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.CookieReplyPacketJunkSize = cookieReplyJunkSize
+			case "s4":
+				transportJunkSize, err := parseUint16(
+					val,
+					"transportPacketJunkSize",
+				)
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.TransportPacketJunkSize = transportJunkSize
 			case "h1":
 				initPacketMagicHeader, err := parseUint32(val, "initPacketMagicHeader")
 				if err != nil {
@@ -346,6 +377,28 @@ func FromWgQuick(s string, name string) (*Config, error) {
 					return nil, err
 				}
 				conf.Interface.TransportPacketMagicHeader = transportPacketMagicHeader
+			case "i1", "i2", "i3", "i4", "i5":
+				if len(val) == 0 {
+					continue
+				}
+				if conf.Interface.IPackets == nil {
+					conf.Interface.IPackets = make(map[string]string)
+				}
+				conf.Interface.IPackets[key] = val
+			case "j1", "j2", "j3":
+				if len(val) == 0 {
+					continue
+				}
+				if conf.Interface.JPackets == nil {
+					conf.Interface.JPackets = make(map[string]string)
+				}
+				conf.Interface.JPackets[key] = val
+			case "itime":
+				itime, err := parseUint32(val, "itime")
+				if err != nil {
+					return nil, fmt.Errorf("itime parse uint32: %w", err)
+				}
+				conf.Interface.ITime = itime
 			case "mtu":
 				m, err := parseMTU(val)
 				if err != nil {
@@ -491,6 +544,9 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 			ResponsePacketMagicHeader:  existingConfig.Interface.ResponsePacketMagicHeader,
 			UnderloadPacketMagicHeader: existingConfig.Interface.UnderloadPacketMagicHeader,
 			TransportPacketMagicHeader: existingConfig.Interface.TransportPacketMagicHeader,
+			IPackets:                   existingConfig.Interface.IPackets,
+			JPackets:                   existingConfig.Interface.JPackets,
+			ITime:                      existingConfig.Interface.ITime,
 		},
 	}
 	var peer *Peer
@@ -598,6 +654,28 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 					return nil, err
 				}
 				conf.Interface.TransportPacketMagicHeader = transportPacketMagicHeader
+			case "i1", "i2", "i3", "i4", "i5":
+				if len(val) == 0 {
+					return nil, fmt.Errorf("cannot parse empty %s junk value: %s", key, val)
+				}
+				if conf.Interface.IPackets == nil {
+					conf.Interface.IPackets = make(map[string]string)
+				}
+				conf.Interface.IPackets[key] = val
+			case "j1", "j2", "j3":
+				if len(val) == 0 {
+					return nil, fmt.Errorf("cannot parse empty %s junk value: %s", key, val)
+				}
+				if conf.Interface.JPackets == nil {
+					conf.Interface.JPackets = make(map[string]string)
+				}
+				conf.Interface.JPackets[key] = val
+			case "itime":
+				itime, err := parseUint32(val, "itime")
+				if err != nil {
+					return nil, fmt.Errorf("itime parse uint32: %w", err)
+				}
+				conf.Interface.ITime = itime
 			case "fwmark":
 				// Ignored for now.
 

@@ -40,6 +40,14 @@ func (conf *Config) ToWgQuick() string {
 		output.WriteString(fmt.Sprintf("S2 = %d\n", conf.Interface.ResponsePacketJunkSize))
 	}
 
+	if conf.Interface.CookieReplyPacketJunkSize > 0 {
+		output.WriteString(fmt.Sprintf("S3 = %d\n", conf.Interface.CookieReplyPacketJunkSize))
+	}
+
+	if conf.Interface.TransportPacketJunkSize > 0 {
+		output.WriteString(fmt.Sprintf("S4 = %d\n", conf.Interface.TransportPacketJunkSize))
+	}
+
 	if conf.Interface.InitPacketMagicHeader > 0 {
 		output.WriteString(fmt.Sprintf("H1 = %d\n", conf.Interface.InitPacketMagicHeader))
 	}
@@ -54,6 +62,18 @@ func (conf *Config) ToWgQuick() string {
 
 	if conf.Interface.TransportPacketMagicHeader > 0 {
 		output.WriteString(fmt.Sprintf("H4 = %d\n", conf.Interface.TransportPacketMagicHeader))
+	}
+
+	for key, value := range conf.Interface.IPackets {
+		output.WriteString(fmt.Sprintf("%s = %s\n", strings.ToUpper(key), value))
+	}
+
+	for key, value := range conf.Interface.JPackets {
+		output.WriteString(fmt.Sprintf("%s = %s\n", strings.ToUpper(key), value))
+	}
+
+	if conf.Interface.ITime > 0 {
+		output.WriteString(fmt.Sprintf("Itime = %d\n", conf.Interface.ITime))
 	}
 
 	if len(conf.Interface.Addresses) > 0 {
@@ -149,6 +169,14 @@ func (conf *Config) ToUAPI() (uapi string, dnsErr error) {
 		output.WriteString(fmt.Sprintf("s2=%d\n", conf.Interface.ResponsePacketJunkSize))
 	}
 
+	if conf.Interface.CookieReplyPacketJunkSize > 0 {
+		output.WriteString(fmt.Sprintf("s3=%d\n", conf.Interface.CookieReplyPacketJunkSize))
+	}
+
+	if conf.Interface.TransportPacketJunkSize > 0 {
+		output.WriteString(fmt.Sprintf("s4=%d\n", conf.Interface.TransportPacketJunkSize))
+	}
+
 	if conf.Interface.InitPacketMagicHeader > 0 {
 		output.WriteString(fmt.Sprintf("h1=%d\n", conf.Interface.InitPacketMagicHeader))
 	}
@@ -163,6 +191,18 @@ func (conf *Config) ToUAPI() (uapi string, dnsErr error) {
 
 	if conf.Interface.TransportPacketMagicHeader > 0 {
 		output.WriteString(fmt.Sprintf("h4=%d\n", conf.Interface.TransportPacketMagicHeader))
+	}
+
+	for key, value := range conf.Interface.IPackets {
+		output.WriteString(fmt.Sprintf("%s=%s\n", key, value))
+	}
+
+	for key, value := range conf.Interface.JPackets {
+		output.WriteString(fmt.Sprintf("%s=%s\n", key, value))
+	}
+
+	if conf.Interface.ITime > 0 {
+		output.WriteString(fmt.Sprintf("itime=%d\n", conf.Interface.ITime))
 	}
 
 	if len(conf.Peers) > 0 {
