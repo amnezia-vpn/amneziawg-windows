@@ -62,10 +62,10 @@ type Interface struct {
 	ResponsePacketJunkSize     uint16
 	CookieReplyPacketJunkSize  uint16
 	TransportPacketJunkSize    uint16
-	InitPacketMagicHeader      uint32
-	ResponsePacketMagicHeader  uint32
-	UnderloadPacketMagicHeader uint32
-	TransportPacketMagicHeader uint32
+	InitPacketMagicHeader      string
+	ResponsePacketMagicHeader  string
+	UnderloadPacketMagicHeader string
+	TransportPacketMagicHeader string
 
 	IPackets map[string]string
 	JPackets map[string]string

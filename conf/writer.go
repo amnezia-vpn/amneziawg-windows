@@ -48,20 +48,20 @@ func (conf *Config) ToWgQuick() string {
 		output.WriteString(fmt.Sprintf("S4 = %d\n", conf.Interface.TransportPacketJunkSize))
 	}
 
-	if conf.Interface.InitPacketMagicHeader > 0 {
-		output.WriteString(fmt.Sprintf("H1 = %d\n", conf.Interface.InitPacketMagicHeader))
+	if len(conf.Interface.InitPacketMagicHeader) != 0 {
+		output.WriteString(fmt.Sprintf("H1 = %s\n", conf.Interface.InitPacketMagicHeader))
 	}
 
-	if conf.Interface.ResponsePacketMagicHeader > 0 {
-		output.WriteString(fmt.Sprintf("H2 = %d\n", conf.Interface.ResponsePacketMagicHeader))
+	if len(conf.Interface.ResponsePacketMagicHeader) != 0 {
+		output.WriteString(fmt.Sprintf("H2 = %s\n", conf.Interface.ResponsePacketMagicHeader))
 	}
 
-	if conf.Interface.UnderloadPacketMagicHeader > 0 {
-		output.WriteString(fmt.Sprintf("H3 = %d\n", conf.Interface.UnderloadPacketMagicHeader))
+	if len(conf.Interface.UnderloadPacketMagicHeader) != 0 {
+		output.WriteString(fmt.Sprintf("H3 = %s\n", conf.Interface.UnderloadPacketMagicHeader))
 	}
 
-	if conf.Interface.TransportPacketMagicHeader > 0 {
-		output.WriteString(fmt.Sprintf("H4 = %d\n", conf.Interface.TransportPacketMagicHeader))
+	if len(conf.Interface.TransportPacketMagicHeader) != 0 {
+		output.WriteString(fmt.Sprintf("H4 = %s\n", conf.Interface.TransportPacketMagicHeader))
 	}
 
 	for key, value := range conf.Interface.IPackets {
@@ -177,20 +177,20 @@ func (conf *Config) ToUAPI() (uapi string, dnsErr error) {
 		output.WriteString(fmt.Sprintf("s4=%d\n", conf.Interface.TransportPacketJunkSize))
 	}
 
-	if conf.Interface.InitPacketMagicHeader > 0 {
-		output.WriteString(fmt.Sprintf("h1=%d\n", conf.Interface.InitPacketMagicHeader))
+	if len(conf.Interface.InitPacketMagicHeader) != 0 {
+		output.WriteString(fmt.Sprintf("h1=%s\n", conf.Interface.InitPacketMagicHeader))
 	}
 
-	if conf.Interface.ResponsePacketMagicHeader > 0 {
-		output.WriteString(fmt.Sprintf("h2=%d\n", conf.Interface.ResponsePacketMagicHeader))
+	if len(conf.Interface.ResponsePacketMagicHeader) != 0 {
+		output.WriteString(fmt.Sprintf("h2=%s\n", conf.Interface.ResponsePacketMagicHeader))
 	}
 
-	if conf.Interface.UnderloadPacketMagicHeader > 0 {
-		output.WriteString(fmt.Sprintf("h3=%d\n", conf.Interface.UnderloadPacketMagicHeader))
+	if len(conf.Interface.UnderloadPacketMagicHeader) != 0 {
+		output.WriteString(fmt.Sprintf("h3=%s\n", conf.Interface.UnderloadPacketMagicHeader))
 	}
 
-	if conf.Interface.TransportPacketMagicHeader > 0 {
-		output.WriteString(fmt.Sprintf("h4=%d\n", conf.Interface.TransportPacketMagicHeader))
+	if len(conf.Interface.TransportPacketMagicHeader) != 0 {
+		output.WriteString(fmt.Sprintf("h4=%s\n", conf.Interface.TransportPacketMagicHeader))
 	}
 
 	for key, value := range conf.Interface.IPackets {

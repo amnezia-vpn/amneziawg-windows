@@ -354,29 +354,13 @@ func FromWgQuick(s string, name string) (*Config, error) {
 				}
 				conf.Interface.TransportPacketJunkSize = transportJunkSize
 			case "h1":
-				initPacketMagicHeader, err := parseUint32(val, "initPacketMagicHeader")
-				if err != nil {
-					return nil, err
-				}
-				conf.Interface.InitPacketMagicHeader = initPacketMagicHeader
+				conf.Interface.InitPacketMagicHeader = val
 			case "h2":
-				responsePacketMagicHeader, err := parseUint32(val, "responsePacketMagicHeader")
-				if err != nil {
-					return nil, err
-				}
-				conf.Interface.ResponsePacketMagicHeader = responsePacketMagicHeader
+				conf.Interface.ResponsePacketMagicHeader = val
 			case "h3":
-				underloadPacketMagicHeader, err := parseUint32(val, "underloadPacketMagicHeader")
-				if err != nil {
-					return nil, err
-				}
-				conf.Interface.UnderloadPacketMagicHeader = underloadPacketMagicHeader
+				conf.Interface.UnderloadPacketMagicHeader = val
 			case "h4":
-				transportPacketMagicHeader, err := parseUint32(val, "transportPacketMagicHeader")
-				if err != nil {
-					return nil, err
-				}
-				conf.Interface.TransportPacketMagicHeader = transportPacketMagicHeader
+				conf.Interface.TransportPacketMagicHeader = val
 			case "i1", "i2", "i3", "i4", "i5":
 				if len(val) == 0 {
 					continue
@@ -540,6 +524,8 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 			JunkPacketMaxSize:          existingConfig.Interface.JunkPacketMaxSize,
 			InitPacketJunkSize:         existingConfig.Interface.InitPacketJunkSize,
 			ResponsePacketJunkSize:     existingConfig.Interface.ResponsePacketJunkSize,
+			CookieReplyPacketJunkSize:  existingConfig.Interface.CookieReplyPacketJunkSize,
+			TransportPacketJunkSize:    existingConfig.Interface.TransportPacketJunkSize,
 			InitPacketMagicHeader:      existingConfig.Interface.InitPacketMagicHeader,
 			ResponsePacketMagicHeader:  existingConfig.Interface.ResponsePacketMagicHeader,
 			UnderloadPacketMagicHeader: existingConfig.Interface.UnderloadPacketMagicHeader,
@@ -630,33 +616,35 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 					return nil, err
 				}
 				conf.Interface.ResponsePacketJunkSize = responsePacketJunkSize
+			case "s3":
+				cookieReplyPacketJunkSize, err := parseUint16(
+					val,
+					"cookieReplyPacketJunkSize",
+				)
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.CookieReplyPacketJunkSize = cookieReplyPacketJunkSize
+			case "s4":
+				transportPacketJunkSize, err := parseUint16(
+					val,
+					"transportPacketJunkSize",
+				)
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.TransportPacketJunkSize = transportPacketJunkSize
 			case "h1":
-				initPacketMagicHeader, err := parseUint32(val, "initPacketMagicHeader")
-				if err != nil {
-					return nil, err
-				}
-				conf.Interface.InitPacketMagicHeader = initPacketMagicHeader
+				conf.Interface.InitPacketMagicHeader = val
 			case "h2":
-				responsePacketMagicHeader, err := parseUint32(val, "responsePacketMagicHeader")
-				if err != nil {
-					return nil, err
-				}
-				conf.Interface.ResponsePacketMagicHeader = responsePacketMagicHeader
+				conf.Interface.ResponsePacketMagicHeader = val
 			case "h3":
-				underloadPacketMagicHeader, err := parseUint32(val, "underloadPacketMagicHeader")
-				if err != nil {
-					return nil, err
-				}
-				conf.Interface.UnderloadPacketMagicHeader = underloadPacketMagicHeader
+				conf.Interface.UnderloadPacketMagicHeader = val
 			case "h4":
-				transportPacketMagicHeader, err := parseUint32(val, "transportPacketMagicHeader")
-				if err != nil {
-					return nil, err
-				}
-				conf.Interface.TransportPacketMagicHeader = transportPacketMagicHeader
+				conf.Interface.TransportPacketMagicHeader = val
 			case "i1", "i2", "i3", "i4", "i5":
 				if len(val) == 0 {
-					return nil, fmt.Errorf("cannot parse empty %s junk value: %s", key, val)
+					return nil, fmt.Errorf("cannot parse empty %s", key)
 				}
 				if conf.Interface.IPackets == nil {
 					conf.Interface.IPackets = make(map[string]string)
@@ -664,7 +652,7 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 				conf.Interface.IPackets[key] = val
 			case "j1", "j2", "j3":
 				if len(val) == 0 {
-					return nil, fmt.Errorf("cannot parse empty %s junk value: %s", key, val)
+					return nil, fmt.Errorf("cannot parse empty %s", key)
 				}
 				if conf.Interface.JPackets == nil {
 					conf.Interface.JPackets = make(map[string]string)
