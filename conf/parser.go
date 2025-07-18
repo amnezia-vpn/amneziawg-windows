@@ -354,12 +354,24 @@ func FromWgQuick(s string, name string) (*Config, error) {
 				}
 				conf.Interface.TransportPacketJunkSize = transportJunkSize
 			case "h1":
+				if len(val) == 0 {
+					return nil, fmt.Errorf("h1 needs to be defined")
+				}
 				conf.Interface.InitPacketMagicHeader = val
 			case "h2":
+				if len(val) == 0 {
+					return nil, fmt.Errorf("h2 needs to be defined")
+				}
 				conf.Interface.ResponsePacketMagicHeader = val
 			case "h3":
+				if len(val) == 0 {
+					return nil, fmt.Errorf("h3 needs to be defined")
+				}
 				conf.Interface.UnderloadPacketMagicHeader = val
 			case "h4":
+				if len(val) == 0 {
+					return nil, fmt.Errorf("h4 needs to be defined")
+				}
 				conf.Interface.TransportPacketMagicHeader = val
 			case "i1", "i2", "i3", "i4", "i5":
 				if len(val) == 0 {
@@ -635,12 +647,24 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 				}
 				conf.Interface.TransportPacketJunkSize = transportPacketJunkSize
 			case "h1":
+				if len(val) == 0 {
+					return nil, fmt.Errorf("h1 needs to be defined")
+				}
 				conf.Interface.InitPacketMagicHeader = val
 			case "h2":
+				if len(val) == 0 {
+					return nil, fmt.Errorf("h2 needs to be defined")
+				}
 				conf.Interface.ResponsePacketMagicHeader = val
 			case "h3":
+				if len(val) == 0 {
+					return nil, fmt.Errorf("h3 needs to be defined")
+				}
 				conf.Interface.UnderloadPacketMagicHeader = val
 			case "h4":
+				if len(val) == 0 {
+					return nil, fmt.Errorf("h4 needs to be defined")
+				}
 				conf.Interface.TransportPacketMagicHeader = val
 			case "i1", "i2", "i3", "i4", "i5":
 				if len(val) == 0 {
