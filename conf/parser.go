@@ -671,6 +671,10 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 				}
 				conf.Interface.JPackets[key] = val
 			case "itime":
+				if len(val) == 0 {
+					return nil, fmt.Errorf("cannot parse empty itime value")
+				}
+
 				itime, err := parseUint32(val, "itime")
 				if err != nil {
 					return nil, fmt.Errorf("itime parse uint32: %w", err)
