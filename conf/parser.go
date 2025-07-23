@@ -394,6 +394,9 @@ func FromWgQuick(s string, name string) (*Config, error) {
 				}
 				conf.Interface.JPackets[key] = val
 			case "itime":
+				if len(val) == 0 {
+					continue
+				}
 				itime, err := parseUint32(val, "itime")
 				if err != nil {
 					return nil, fmt.Errorf("itime parse uint32: %w", err)
