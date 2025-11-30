@@ -543,6 +543,8 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 			JunkPacketMaxSize:          existingConfig.Interface.JunkPacketMaxSize,
 			InitPacketJunkSize:         existingConfig.Interface.InitPacketJunkSize,
 			ResponsePacketJunkSize:     existingConfig.Interface.ResponsePacketJunkSize,
+			CookieReplyPacketJunkSize:  existingConfig.Interface.CookieReplyPacketJunkSize,
+			TransportPacketJunkSize:    existingConfig.Interface.TransportPacketJunkSize,
 			InitPacketMagicHeader:      existingConfig.Interface.InitPacketMagicHeader,
 			ResponsePacketMagicHeader:  existingConfig.Interface.ResponsePacketMagicHeader,
 			UnderloadPacketMagicHeader: existingConfig.Interface.UnderloadPacketMagicHeader,
@@ -633,6 +635,24 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 					return nil, err
 				}
 				conf.Interface.ResponsePacketJunkSize = responsePacketJunkSize
+			case "s3":
+				cookieReplyJunkSize, err := parseUint16(
+					val,
+					"cookieReplyPacketJunkSize",
+				)
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.CookieReplyPacketJunkSize = cookieReplyJunkSize
+			case "s4":
+				transportJunkSize, err := parseUint16(
+					val,
+					"transportPacketJunkSize",
+				)
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.TransportPacketJunkSize = transportJunkSize
 			case "h1":
 				initPacketMagicHeader, err := parseUint32(val, "initPacketMagicHeader")
 				if err != nil {
