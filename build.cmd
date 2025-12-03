@@ -31,6 +31,7 @@ if exist .deps\prepared goto :build
 	set CGO_LDFLAGS=%CGO_LDFLAGS% -Wl,--high-entropy-va
 	call :build_plat x64 x86_64 amd64 || goto :error
 	call :build_plat x86 i686 386 || goto :error
+	call :build_plat arm64 aarch64 arm64 || goto :error
 
 :success
 	echo [+] Success
