@@ -1,5 +1,5 @@
-github.com/amnezia-vpn/amneziawg-go v0.2.18 h1:pUn7/P8qdGmHd6JmE3bCQXPblZs3vruWR98nLODQLJg=
-github.com/amnezia-vpn/amneziawg-go v0.2.18/go.mod h1:aMgOk9MuX0xI7b5TKAYp8pLM54RlXcOPzDvYw3YEO5A=
+github.com/amnezia-vpn/amneziawg-go v0.2.19 h1:l3rOmrA4o5z38kpgnA5iSk1yOm7Cv3AafIi4vxpSEV0=
+github.com/amnezia-vpn/amneziawg-go v0.2.19/go.mod h1:aMgOk9MuX0xI7b5TKAYp8pLM54RlXcOPzDvYw3YEO5A=
 github.com/google/btree v1.1.3 h1:CVpQJjYgC4VbzxeGVHfvZrv1ctoYCAI8vbl07Fcxlyg=
 github.com/google/btree v1.1.3/go.mod h1:qOPhT0dTNdNzV6Z/lhRX0YXUafgPLFUh+gZMl761Gm4=
 go.uber.org/atomic v1.11.0 h1:ZvwS0R+56ePWxUNi+Atn9dWONBPp/AUETXlHW0DxSjE=
