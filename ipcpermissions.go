@@ -10,7 +10,7 @@ import (
 
 	"github.com/amnezia-vpn/amneziawg-go/v3/ipc"
 
-	"github.com/amnezia-vpn/amneziawg-windows/conf"
+	"github.com/amnezia-vpn/amneziawg-windows/v3/conf"
 )
 
 func CopyConfigOwnerToIPCSecurityDescriptor(filename string) error {
