@@ -34,6 +34,17 @@ var _specialHandshakeTags = map[string]struct{}{
 	"itime": struct{}{},
 }
 
+// Optional AWG 3+ interface keys may be present with an empty value (treated as unset / 0).
+var _optionalEmptyInterfaceKeys = map[string]struct{}{
+	"headerprotectionkey":    {},
+	"contentpaddingaddition": {},
+	"rekeyaftertime":         {},
+	"rekeytimeout":           {},
+	"rejectaftertime":        {},
+	"keepalivetimeout":       {},
+	"maxhandshakeattempts":   {},
+}
+
 type ParseError struct {
 	why      string
 	offender string
@@ -158,18 +169,11 @@ func parseUint32(value, name string) (uint32, error) {
 	return uint32(m), nil
 }
 
-func parsePersistentKeepalive(s string) (uint16, error) {
-	if s == "off" {
-		return 0, nil
+func parsePersistentKeepalive(s string) (string, error) {
+	if s == "off" || s == "(off)" {
+		return "0", nil
 	}
-	m, err := strconv.Atoi(s)
-	if err != nil {
-		return 0, err
-	}
-	if m < 0 || m > 65535 {
-		return 0, &ParseError{l18n.Sprintf("Invalid persistent keepalive"), s}
-	}
-	return uint16(m), nil
+	return s, nil
 }
 
 func parseTableOff(s string) (bool, error) {
@@ -281,7 +285,9 @@ func FromWgQuick(s string, name string) (*Config, error) {
 			return nil, &ParseError{l18n.Sprintf("Config key is missing an equals separator"), line}
 		}
 		key, val := strings.TrimSpace(lineLower[:equals]), strings.TrimSpace(line[equals+1:])
-		if _, ok := _specialHandshakeTags[key]; !ok && len(val) == 0 {
+		_, allowEmptyHandshake := _specialHandshakeTags[key]
+		_, allowEmptyOptional := _optionalEmptyInterfaceKeys[key]
+		if !allowEmptyHandshake && !allowEmptyOptional && len(val) == 0 {
 			return nil, &ParseError{l18n.Sprintf("Key must have a value"), line}
 		}
 		if parserState == inInterfaceSection {
@@ -369,6 +375,28 @@ func FromWgQuick(s string, name string) (*Config, error) {
 					conf.Interface.IPackets = make(map[string]string)
 				}
 				conf.Interface.IPackets[key] = val
+			case "headerprotectionkey":
+				if len(val) == 0 {
+					conf.Interface.HeaderProtectionKey = Key{}
+					continue
+				}
+				k, err := parseKeyBase64(val)
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.HeaderProtectionKey = *k
+			case "contentpaddingaddition":
+				conf.Interface.ContentPaddingAddition = val
+			case "rekeyaftertime":
+				conf.Interface.RekeyAfterTime = val
+			case "rekeytimeout":
+				conf.Interface.RekeyTimeout = val
+			case "rejectaftertime":
+				conf.Interface.RejectAfterTime = val
+			case "keepalivetimeout":
+				conf.Interface.KeepaliveTimeout = val
+			case "maxhandshakeattempts":
+				conf.Interface.MaxHandshakeAttempts = val
 			case "mtu":
 				m, err := parseMTU(val)
 				if err != nil {
@@ -517,6 +545,13 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 			UnderloadPacketMagicHeader: existingConfig.Interface.UnderloadPacketMagicHeader,
 			TransportPacketMagicHeader: existingConfig.Interface.TransportPacketMagicHeader,
 			IPackets:                   existingConfig.Interface.IPackets,
+			HeaderProtectionKey:        existingConfig.Interface.HeaderProtectionKey,
+			ContentPaddingAddition:     existingConfig.Interface.ContentPaddingAddition,
+			RekeyAfterTime:             existingConfig.Interface.RekeyAfterTime,
+			RekeyTimeout:               existingConfig.Interface.RekeyTimeout,
+			RejectAfterTime:            existingConfig.Interface.RejectAfterTime,
+			KeepaliveTimeout:           existingConfig.Interface.KeepaliveTimeout,
+			MaxHandshakeAttempts:       existingConfig.Interface.MaxHandshakeAttempts,
 		},
 	}
 	var peer *Peer
@@ -535,9 +570,6 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 			return nil, &ParseError{l18n.Sprintf("Config key is missing an equals separator"), line}
 		}
 		key, val := line[:equals], line[equals+1:]
-		if len(val) == 0 {
-			return nil, &ParseError{l18n.Sprintf("Key must have a value"), line}
-		}
 		switch key {
 		case "public_key":
 			conf.maybeAddPeer(peer)
@@ -549,6 +581,9 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 			} else {
 				return nil, &ParseError{l18n.Sprintf("Error in getting configuration"), val}
 			}
+		}
+		if len(val) == 0 {
+			return nil, &ParseError{l18n.Sprintf("Key must have a value"), line}
 		}
 		if parserState == inInterfaceSection {
 			switch key {
@@ -634,6 +669,24 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 					conf.Interface.IPackets = make(map[string]string)
 				}
 				conf.Interface.IPackets[key] = val
+			case "header_protection_key":
+				k, err := parseKeyHex(val)
+				if err != nil {
+					return nil, err
+				}
+				conf.Interface.HeaderProtectionKey = *k
+			case "content_padding_addition":
+				conf.Interface.ContentPaddingAddition = val
+			case "rekey_after_time":
+				conf.Interface.RekeyAfterTime = val
+			case "rekey_timeout":
+				conf.Interface.RekeyTimeout = val
+			case "reject_after_time":
+				conf.Interface.RejectAfterTime = val
+			case "keepalive_timeout":
+				conf.Interface.KeepaliveTimeout = val
+			case "max_handshake_attempts":
+				conf.Interface.MaxHandshakeAttempts = val
 			case "fwmark":
 				// Ignored for now.
 

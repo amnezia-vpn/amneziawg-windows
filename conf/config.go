@@ -68,6 +68,14 @@ type Interface struct {
 	TransportPacketMagicHeader string
 
 	IPackets map[string]string
+
+	HeaderProtectionKey    Key
+	ContentPaddingAddition string
+	RekeyAfterTime         string
+	RekeyTimeout           string
+	RejectAfterTime        string
+	KeepaliveTimeout       string
+	MaxHandshakeAttempts   string
 }
 
 type Peer struct {
@@ -75,7 +83,7 @@ type Peer struct {
 	PresharedKey        Key
 	AllowedIPs          []IPCidr
 	Endpoint            Endpoint
-	PersistentKeepalive uint16
+	PersistentKeepalive string // "a", "a-b", or empty/"0"/"off"
 
 	RxBytes           Bytes
 	TxBytes           Bytes
