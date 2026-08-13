@@ -9,7 +9,7 @@ require (
 )
 
 require (
-	github.com/amnezia-vpn/amneziawg-go/v3 v3.0.1
+	github.com/amnezia-vpn/amneziawg-go/v3 v3.1.20260812
 	golang.org/x/net v0.44.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
 )

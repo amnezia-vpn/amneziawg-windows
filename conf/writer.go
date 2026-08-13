@@ -10,6 +10,27 @@ import (
 	"strings"
 )
 
+// boolToUAPI converts awg-quick on/off (and 0/1/true/false) to UAPI 1/0.
+// amneziawg-go uses strconv.ParseBool and rejects "on"/"off".
+func boolToUAPI(v string) string {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "on", "1", "true", "t", "yes":
+		return "1"
+	default:
+		return "0"
+	}
+}
+
+// boolFromUAPI normalizes UAPI 1/0 (or true/false) to awg-quick on/off.
+func boolFromUAPI(v string) string {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "1", "true", "t", "on", "yes":
+		return "on"
+	default:
+		return "off"
+	}
+}
+
 func (conf *Config) ToWgQuick() string {
 	var output strings.Builder
 	output.WriteString("[Interface]\n")
@@ -88,6 +109,12 @@ func (conf *Config) ToWgQuick() string {
 	}
 	if len(conf.Interface.MaxHandshakeAttempts) > 0 {
 		output.WriteString(fmt.Sprintf("MaxHandshakeAttempts = %s\n", conf.Interface.MaxHandshakeAttempts))
+	}
+	if len(conf.Interface.RandomTrailers) > 0 {
+		output.WriteString(fmt.Sprintf("RandomTrailers = %s\n", conf.Interface.RandomTrailers))
+	}
+	if len(conf.Interface.DisableCookies) > 0 {
+		output.WriteString(fmt.Sprintf("DisableCookies = %s\n", conf.Interface.DisableCookies))
 	}
 
 	if len(conf.Interface.Addresses) > 0 {
@@ -231,6 +258,12 @@ func (conf *Config) ToUAPI() (uapi string, dnsErr error) {
 	}
 	if len(conf.Interface.MaxHandshakeAttempts) > 0 {
 		output.WriteString(fmt.Sprintf("max_handshake_attempts=%s\n", conf.Interface.MaxHandshakeAttempts))
+	}
+	if len(conf.Interface.RandomTrailers) > 0 {
+		output.WriteString(fmt.Sprintf("random_trailers=%s\n", boolToUAPI(conf.Interface.RandomTrailers)))
+	}
+	if len(conf.Interface.DisableCookies) > 0 {
+		output.WriteString(fmt.Sprintf("disable_cookies=%s\n", boolToUAPI(conf.Interface.DisableCookies)))
 	}
 
 	if len(conf.Peers) > 0 {

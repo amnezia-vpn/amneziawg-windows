@@ -76,6 +76,8 @@ type Interface struct {
 	RejectAfterTime        string
 	KeepaliveTimeout       string
 	MaxHandshakeAttempts   string
+	RandomTrailers         string
+	DisableCookies         string
 }
 
 type Peer struct {
