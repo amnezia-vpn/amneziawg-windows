@@ -43,6 +43,8 @@ var _optionalEmptyInterfaceKeys = map[string]struct{}{
 	"rejectaftertime":        {},
 	"keepalivetimeout":       {},
 	"maxhandshakeattempts":   {},
+	"randomtrailers":         {},
+	"disablecookies":         {},
 }
 
 type ParseError struct {
@@ -397,6 +399,10 @@ func FromWgQuick(s string, name string) (*Config, error) {
 				conf.Interface.KeepaliveTimeout = val
 			case "maxhandshakeattempts":
 				conf.Interface.MaxHandshakeAttempts = val
+			case "randomtrailers":
+				conf.Interface.RandomTrailers = val
+			case "disablecookies":
+				conf.Interface.DisableCookies = val
 			case "mtu":
 				m, err := parseMTU(val)
 				if err != nil {
@@ -552,6 +558,8 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 			RejectAfterTime:            existingConfig.Interface.RejectAfterTime,
 			KeepaliveTimeout:           existingConfig.Interface.KeepaliveTimeout,
 			MaxHandshakeAttempts:       existingConfig.Interface.MaxHandshakeAttempts,
+			RandomTrailers:             existingConfig.Interface.RandomTrailers,
+			DisableCookies:             existingConfig.Interface.DisableCookies,
 		},
 	}
 	var peer *Peer
@@ -687,6 +695,10 @@ func FromUAPI(reader io.Reader, existingConfig *Config) (*Config, error) {
 				conf.Interface.KeepaliveTimeout = val
 			case "max_handshake_attempts":
 				conf.Interface.MaxHandshakeAttempts = val
+			case "random_trailers":
+				conf.Interface.RandomTrailers = boolFromUAPI(val)
+			case "disable_cookies":
+				conf.Interface.DisableCookies = boolFromUAPI(val)
 			case "fwmark":
 				// Ignored for now.
 
